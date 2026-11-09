@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiz | Uniprocessor Scheduling | COS 122</title>
+  <style>
+:root {
+  --page: #f8f5ef;
+  --paper: #fffdfa;
+  --ink: #2f2925;
+  --muted: #6e6258;
+  --rule: #d9cfc2;
+  --wine: #8b2252;
+  --green: #276248;
+  --blue: #24527a;
+  --orange: #a94e24;
+  --teal: #086d72;
+  --heading: Georgia, serif;
+  --body: Georgia, serif;
+  --label: Arial, sans-serif;
+  --mono: Consolas, "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--page); }
+body { margin: 0; color: var(--ink); font: 18px/1.65 var(--body); }
+a { color: var(--wine); text-underline-offset: 2px; }
+button, input, textarea { font: inherit; }
+
+.site-header { position: sticky; top: 0; z-index: 10; background: rgba(248, 245, 239, .98); border-bottom: 3px solid var(--wine); }
+.site-header__inner, .page-head, .page-tabs__inner, .chapter-page, .site-footer__inner { max-width: 980px; margin: 0 auto; padding-right: 1.25rem; padding-left: 1.25rem; }
+.site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: .7rem; padding-bottom: .7rem; }
+.brand { display: grid; gap: .05rem; }
+.brand__name, .eyebrow, .block__label, .difficulty, .question-label { font: 700 .7rem/1.3 var(--label); letter-spacing: .1em; text-transform: uppercase; }
+.brand__name, .eyebrow { color: var(--wine); }
+.brand__chapter { font: 700 1.08rem/1.15 var(--heading); }
+.site-header__tag { color: var(--muted); font: .78rem/1.3 var(--label); text-align: right; }
+
+.page-head { padding-top: 1rem; padding-bottom: .45rem; }
+.page-title { margin: .3rem 0; font: 700 1.95rem/1.15 var(--heading); }
+.page-subtitle { max-width: 48rem; margin: 0; color: var(--muted); }
+.page-tabs { position: sticky; top: 59px; z-index: 9; background: rgba(248, 245, 239, .98); border-bottom: 1px solid var(--rule); }
+.page-tabs__inner { display: flex; overflow-x: auto; padding-top: 0; padding-bottom: 0; scrollbar-width: none; }
+.page-tabs__inner::-webkit-scrollbar { display: none; }
+.page-tabs a { padding: .7rem 1rem; color: var(--muted); border-bottom: 2px solid transparent; font: 700 .76rem/1 var(--label); letter-spacing: .07em; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+.page-tabs a:hover, .page-tabs a[aria-current="page"] { color: var(--wine); border-bottom-color: var(--wine); }
+
+.chapter-page { padding-top: 1.5rem; padding-bottom: 4rem; }
+h2, h3 { font-family: var(--heading); line-height: 1.25; }
+h2 { margin: 1.8rem 0 .7rem; font-size: 1.35rem; }
+h3 { margin: 1.15rem 0 .5rem; font-size: 1.08rem; }
+p { margin: 0 0 1rem; }
+ul, ol { padding-left: 1.4rem; }
+li + li { margin-top: .4rem; }
+code, pre, textarea { font-family: var(--mono); }
+code { padding: .08rem .28rem; color: var(--teal); background: #e8f3f3; border-radius: 3px; }
+pre { overflow-x: auto; margin: 0; padding: 1rem; color: #f7f6f1; background: #1f2528; border-radius: 6px; }
+
+.block { margin: 1.15rem 0; padding: .9rem 1rem; border-left: 4px solid var(--rule); border-radius: 0 6px 6px 0; background: #f4eee6; }
+.block__label { margin: 0 0 .25rem; }
+.block--definition { border-color: var(--wine); }
+.block--method { border-color: var(--blue); }
+.block--caution { border-color: var(--orange); }
+.block--check { border-color: var(--green); }
+.two-col, .reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.comparison, .example, .practice-set, .quiz-card, .reference-card, .runner-card { padding: 1rem 1.1rem; border: 1px solid var(--rule); border-radius: 7px; background: var(--paper); }
+.comparison h3, .example h2, .practice-set h2, .quiz-card h2, .reference-card h3, .runner-card h2 { margin-top: 0; }
+.example, .quiz-card, .runner-card { margin: 1.35rem 0; }
+.difficulty { display: inline-block; padding: .22rem .45rem; border-radius: 3px; }
+.difficulty--easy { color: var(--green); background: #e2f0e8; }
+.difficulty--medium { color: var(--blue); background: #e4eef7; }
+.difficulty--hard { color: var(--orange); background: #f7e9df; }
+.question { padding: 1rem 0; border-top: 1px solid var(--rule); }
+.question:first-of-type { border-top: 0; }
+.question-label { margin: 0 0 .35rem; color: var(--muted); }
+.hint { color: var(--muted); font-size: .94rem; }
+.reveal { margin-top: .85rem; overflow: hidden; border: 1px solid var(--rule); border-radius: 6px; }
+.reveal__toggle { display: flex; width: 100%; justify-content: space-between; padding: .68rem .85rem; color: var(--wine); background: #f3ece4; border: 0; cursor: pointer; font: 700 .78rem/1.2 var(--label); letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+.reveal__body { padding: .9rem 1rem; border-top: 1px solid var(--rule); }
+.answer-row, .runner-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .75rem; }
+input[type="text"], input[type="number"], textarea { width: min(30rem, 100%); padding: .55rem .65rem; border: 1px solid #a99a8b; border-radius: 4px; background: #fff; }
+textarea { min-height: 7.5rem; resize: vertical; }
+button { padding: .55rem .75rem; color: #fff; border: 1px solid var(--wine); border-radius: 4px; background: var(--wine); cursor: pointer; font: 700 .78rem/1.2 var(--label); letter-spacing: .04em; text-transform: uppercase; }
+button[data-runner-reset], button[data-memory-prev], button[data-memory-next] { color: var(--blue); border-color: #93adbf; background: #eef5f9; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.feedback, .runner-output, .runner-fallback, .memory-status { min-height: 1.55rem; margin: .6rem 0 0; color: var(--muted); font: .9rem/1.4 var(--label); }
+.mcq { display: grid; gap: .55rem; }
+.mcq label { display: flex; align-items: flex-start; gap: .55rem; }
+.teaching-figure { max-width: 850px; margin: 1.3rem auto; padding: .8rem; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+.teaching-figure img { display: block; width: 100%; height: auto; }
+.teaching-figure figcaption { margin-top: .65rem; color: var(--muted); font: .92rem/1.45 var(--label); }
+.code-caption { margin-top: .65rem; color: var(--muted); font: .92rem/1.45 var(--label); }
+.site-footer { border-top: 1px solid var(--rule); color: var(--muted); font: .8rem/1.4 var(--label); }
+.site-footer__inner { padding-top: 1rem; padding-bottom: 1.2rem; }
+
+@media (max-width: 650px) {
+  body { font-size: 17px; }
+  .site-header__tag { display: none; }
+  .page-title { font-size: 1.55rem; }
+  h2 { font-size: 1.24rem; }
+  .page-tabs { top: 52px; }
+  .two-col, .reference-grid { grid-template-columns: 1fr; }
+}
+
+/* Shared, accessible computing components for the content-light prototype. */
+.cpp98-code { display: block; overflow-x: auto; padding: 1rem; border-radius: .75rem; background: #14212f; color: #eef5f8; font: .9rem/1.58 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; tab-size: 4; }
+.tok-preprocessor { color: #8ad7ff; }.tok-keyword { color: #ff9f80; }.tok-type { color: #8ee0ae; }.tok-function { color: #ffd37a; }.tok-string, .tok-character { color: #c8df85; }.tok-number { color: #dca9ff; }.tok-comment { color: #aeb8c0; font-style: italic; }.tok-operator { color: #f0eff1; }
+[data-component="memory-stepper"] { border: 1px solid #b9c9d4; border-radius: 1rem; background: #f7fbfd; padding: 1rem; }
+[data-memory-step], .memory-step { outline: none; min-height: 8rem; padding: .9rem; border-radius: .6rem; background: #fff; border: 1px solid #d8e4eb; }
+[data-memory-status], [data-step-status] { display: block; margin: .7rem 0; color: #365166; font-weight: 650; }
+[data-component="cpp-runner"] { border: 1px solid #b9c9d4; border-radius: 1rem; background: #f7fbfd; padding: 1rem; }
+.code-editor { position: relative; min-height: 12rem; overflow: hidden; border: 1px solid #7891a3; border-radius: .55rem; background: #14212f; }
+.code-editor:focus-within { outline: 3px solid #e49c19; outline-offset: 3px; }
+[data-runner-highlight] { display: block; min-height: 12rem; max-height: 24rem; margin: 0; padding: 0; overflow: auto; border-radius: 0; background: transparent; }
+[data-runner-highlight] code { display: block; min-width: max-content; min-height: 12rem; padding: .9rem; white-space: pre; font: .9rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; }
+[data-runner-code] { position: absolute; inset: 0; width: 100%; min-height: 12rem; margin: 0; padding: .9rem; border: 0; border-radius: 0; resize: none; overflow: auto; background: transparent; color: transparent; caret-color: #eef5f8; font: .9rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; }
+[data-runner-code]::selection { background: rgba(228, 156, 25, .38); color: transparent; }
+[data-runner-output] { display: block; min-height: 3.25rem; margin-top: .7rem; padding: .8rem; white-space: pre-wrap; border-left: .25rem solid #216b84; background: #fff; color: #172b3a; }
+[data-runner-fallback] { margin-top: .7rem; color: #365166; font-size: .92rem; }
+[data-component="cpp-runner"] button, [data-component="memory-stepper"] button, [data-component="practice-reveal"] button, [data-component="quiz-check"] button { min-height: 2.65rem; margin: .65rem .4rem 0 0; padding: .55rem .9rem; border: 1px solid #165d78; border-radius: .45rem; background: #165d78; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+[data-component] button:hover:not(:disabled) { background: #0f4a62; } [data-component] button:disabled { opacity: .55; cursor: not-allowed; } [data-component] button:focus-visible, [data-component] input:focus-visible, [data-memory-step]:focus-visible { outline: 3px solid #e49c19; outline-offset: 3px; }
+[data-practice-solution], .practice-solution { margin-top: .8rem; padding: 1rem; border-left: .3rem solid #1d7962; background: #edf8f4; }
+[data-quiz-feedback][data-state="correct"] { color: #0b6047; font-weight: 700; } [data-quiz-feedback][data-state="incorrect"], .quiz-feedback[data-state="incorrect"] { color: #9b2d20; font-weight: 700; } [data-quiz-feedback][data-state="blank"], .quiz-feedback[data-state="blank"] { color: #6a4a00; font-weight: 700; }
+@media (max-width: 42rem) { .code-editor, [data-runner-highlight], [data-runner-highlight] code, [data-runner-code] { min-height: 15rem; } [data-runner-highlight] code, [data-runner-code] { font-size: .82rem; } }
+
+.route { margin: 0 0 2.25rem; }
+.route > h2 { margin-bottom: .45rem; }
+.route-stage { margin: 1rem 0; }
+.route-stage > :first-child { margin-top: 0; }
+.route-stage > :last-child { margin-bottom: 0; }
+
+.code-visual-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, .8fr);
+  gap: 1rem;
+  align-items: start;
+  margin: 1.25rem 0;
+}
+.code-visual-pair > [data-pair] { min-width: 0; }
+.code-visual-pair > [data-pair="interpretation"] { grid-column: 1 / -1; }
+.code-visual-pair figure { margin: 0; overflow: visible; }
+.code-visual-pair img,
+.drawing-model img,
+.checked-visual img { display: block; width: 100%; height: auto; }
+
+.construction-steps { padding-left: 1.4rem; }
+.construction-steps li + li { margin-top: .45rem; }
+.attempt-surface {
+  min-height: 7rem;
+  padding: 1rem;
+  border: 2px dashed var(--rule);
+  border-radius: 7px;
+  background: #fff;
+}
+.partial-model { color: var(--muted); }
+.checked-visual { margin: 1rem 0 0; }
+
+.code-visual-pair img { max-width: 21rem; margin-inline: auto; }
+.drawing-model img,
+.checked-visual img { max-width: 24rem; margin-inline: auto; }
+
+@media (max-width: 650px) {
+  .page-tabs__inner {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding-inline: .5rem;
+    overflow: visible;
+  }
+  .page-tabs a {
+    padding: 1rem .2rem;
+    text-align: center;
+    font-size: .75rem;
+    letter-spacing: .02em;
+  }
+  .code-visual-pair { grid-template-columns: 1fr; }
+  .code-visual-pair > [data-pair="interpretation"] { grid-column: auto; }
+}
+/* Practical 3: bordered attribute and output-reasoning tables. */
+.attribute-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 1rem 0; border: 2px solid #9b8777; background: var(--paper); }
+.attribute-table th, .attribute-table td { border: 1px solid #b9a898; padding: .7rem .8rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.attribute-table th { background: #eee5d9; font-weight: 700; }
+.attribute-table tbody tr:nth-child(even) { background: #f7f1e8; }
+.attribute-table caption { text-align: left; font-weight: 700; padding: .4rem 0; }
+@media (max-width: 650px) { .attribute-table th, .attribute-table td { padding: .45rem .35rem; font-size: .88rem; } }
+
+
+/* Contents sidebar (section-nav add-on). */
+.section-nav { font: .86rem/1.35 var(--label); }
+.section-nav__box { border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); }
+.section-nav__box > summary { cursor: pointer; padding: .6rem .8rem; color: var(--wine); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; font-size: .74rem; list-style: none; }
+.section-nav__box > summary::-webkit-details-marker, .section-nav__page > summary::-webkit-details-marker { display: none; }
+.section-nav__box > summary::before { content: "\25B8"; display: inline-block; width: 1.1em; transition: transform .15s; }
+.section-nav__box[open] > summary::before { transform: rotate(90deg); }
+.section-nav__body { padding: 0 .5rem .6rem; }
+.section-nav__page { margin: .1rem 0; }
+.section-nav__page > summary { cursor: pointer; padding: .3rem .4rem; border-radius: 5px; color: var(--ink); font-weight: 700; list-style: none; }
+.section-nav__page > summary::before { content: "\25B8"; display: inline-block; width: 1em; color: var(--muted); transition: transform .15s; }
+.section-nav__page[open] > summary::before { transform: rotate(90deg); }
+.section-nav__page > summary a { color: inherit; text-decoration: none; }
+.section-nav__page.is-current > summary { background: rgba(139, 34, 82, .08); color: var(--wine); }
+.section-nav ul { list-style: none; margin: .1rem 0 .3rem; padding: 0 0 0 1.35rem; }
+.section-nav li + li { margin-top: 0; }
+.section-nav ul a { display: block; padding: .22rem .4rem; border-left: 2px solid var(--rule); color: var(--muted); text-decoration: none; }
+.section-nav ul a:hover { color: var(--wine); border-left-color: var(--wine); }
+.section-nav ul a.is-active { color: var(--wine); border-left-color: var(--wine); font-weight: 700; }
+.section-nav__mock { display: block; margin: .4rem .4rem 0; padding: .35rem .4rem; border-top: 1px solid var(--rule); color: var(--wine); font-weight: 700; text-decoration: none; }
+h2[id], section[id] { scroll-margin-top: 110px; }
+
+/* Wide screens: fixed column to the left of the 980px page. */
+@media (min-width: 1340px) {
+  .section-nav { position: fixed; top: 112px; left: max(.75rem, calc(50vw - 490px - 250px)); width: min(230px, calc(50vw - 490px - 1.5rem)); max-height: calc(100vh - 128px); overflow-y: auto; z-index: 8; }
+}
+/* Narrower screens: a button bottom-left that opens the same list as a panel. */
+@media (max-width: 1339px) {
+  .section-nav { position: fixed; left: .75rem; bottom: .75rem; z-index: 20; max-width: min(320px, calc(100vw - 1.5rem)); }
+  .section-nav__box { box-shadow: 0 2px 10px rgba(47, 41, 37, .18); }
+  .section-nav__box[open] .section-nav__body { max-height: 65vh; overflow-y: auto; }
+}
+@media print { .section-nav { display: none; } }
+
+.svg-scroll { overflow-x: auto; }
+.svg-figure svg { display: block; max-width: none; margin: 0 auto; height: auto; }
+.table-wrap { overflow-x: auto; }
+.decision-table { table-layout: auto; }
+.decision-table td:first-child { white-space: nowrap; font-weight: 700; }
+.attribute-table td sub, .attribute-table th sub { font-size: .7em; }
+.cells { font-family: var(--mono); background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; white-space: nowrap; }
+.answer-key { color: var(--green); font-weight: 700; }
+.mock-jump { margin: 0 0 1rem; }
+
+  </style>
+</head>
+<body data-current-page="quiz">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand"><span class="brand__name">Swift Tuition</span><span class="brand__chapter">COS 122</span></div>
+      <span class="site-header__tag">Operating Systems</span>
+    </div>
+  </header>
+  <header class="page-head">
+    <p class="eyebrow">Quiz · Chapter 9</p>
+    <h1 class="page-title">Topic quiz</h1>
+    <p class="page-subtitle">Check your understanding</p>
+  </header>
+  <nav class="page-tabs" aria-label="Page navigation"><div class="page-tabs__inner"><a href="index.html">Home</a><a href="theory.html">Theory</a><a href="examples.html">Examples</a><a href="practice.html">Practice</a><a href="quiz.html" aria-current="page">Quiz</a></div></nav>
+<aside class="section-nav" aria-label="Contents">
+<details class="section-nav__box"><summary>Contents</summary><div class="section-nav__body">
+<details class="section-nav__page"><summary><a href="index.html">Home</a></summary><ul>
+<li><a href="index.html#home-topic">Uniprocessor Scheduling</a></li>
+<li><a href="index.html#home-order">Suggested order</a></li>
+<li><a href="index.html#mock-test-h">Mock test</a></li>
+<li><a href="index.html#rules-h">Rules used in every answer</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="theory.html">Theory</a></summary><ul>
+<li><a href="theory.html#types">Four kinds of scheduling</a></li>
+<li><a href="theory.html#criteria">Scheduling criteria</a></li>
+<li><a href="theory.html#measures">Reading a time-scale diagram: turnaround and waiting time</a></li>
+<li><a href="theory.html#selection">Selection function and decision mode</a></li>
+<li><a href="theory.html#fcfs">First come, first served (FCFS)</a></li>
+<li><a href="theory.html#rr">Round robin (RR)</a></li>
+<li><a href="theory.html#spn">Shortest process next (SPN)</a></li>
+<li><a href="theory.html#srt">Shortest remaining time (SRT)</a></li>
+<li><a href="theory.html#hrrn">Highest response ratio next (HRRN)</a></li>
+<li><a href="theory.html#feedback">Feedback (multilevel feedback queues)</a></li>
+<li><a href="theory.html#priority">Priority scheduling</a></li>
+<li><a href="theory.html#quantum">The effect of the time quantum</a></li>
+<li><a href="theory.html#compare">Comparing the policies</a></li>
+<li><a href="theory.html#extras">Other textbook topics (short)</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="examples.html">Examples</a></summary><ul>
+<li><a href="examples.html#examples-workload">The workload for every example</a></li>
+<li><a href="examples.html#ex-fcfs-h">Example 1: First come, first served</a></li>
+<li><a href="examples.html#ex-rr-h">Example 2: Round robin with q = 2</a></li>
+<li><a href="examples.html#ex-spn-h">Example 3: Shortest process next</a></li>
+<li><a href="examples.html#ex-srt-h">Example 4: Shortest remaining time</a></li>
+<li><a href="examples.html#ex-hrrn-h">Example 5: Highest response ratio next</a></li>
+<li><a href="examples.html#ex-fb1-h">Example 6: Feedback with q = 1</a></li>
+<li><a href="examples.html#ex-fb2i-h">Example 7: Feedback with q = 2i</a></li>
+<li><a href="examples.html#ex-prio-h">Example 8: Non-preemptive priority</a></li>
+<li><a href="examples.html#ex-pprio-h">Example 9: Preemptive priority</a></li>
+<li><a href="examples.html#ex-compare-h">Example 10: Comparing the nine schedules</a></li>
+<li><a href="examples.html#ex-naming-h">Example 11: Naming the policy from a schedule</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="practice.html">Practice</a></summary><ul>
+<li><a href="practice.html#practice-tasks">Practice tasks</a></li>
+<li><a href="practice.html#pr-fcfs-h">Task 1: FCFS and the three measures</a></li>
+<li><a href="practice.html#pr-rr-h">Task 2: Round robin with q = 3</a></li>
+<li><a href="practice.html#pr-spn-h">Task 3: Shortest process next</a></li>
+<li><a href="practice.html#pr-srt-h">Task 4: Shortest remaining time with measures</a></li>
+<li><a href="practice.html#pr-hrrn-ratio-h">Task 5: HRRN: ratios at a decision time</a></li>
+<li><a href="practice.html#pr-hrrn-ms-h">Task 6: HRRN in milliseconds</a></li>
+<li><a href="practice.html#pr-fb1-h">Task 7: Feedback with q = 1</a></li>
+<li><a href="practice.html#pr-fb2i-h">Task 8: Feedback with q = 2i</a></li>
+<li><a href="practice.html#pr-fb3-h">Task 9: Feedback with three queues: two rules for the lowest queue</a></li>
+<li><a href="practice.html#pr-prio-h">Task 10: Priority: non-preemptive and preemptive</a></li>
+<li><a href="practice.html#pr-name-h">Task 11: Name the policy</a></li>
+<li><a href="practice.html#pr-quantum-h">Task 12: The effect of the quantum</a></li>
+<li><a href="practice.html#pr-types-h">Task 13: Four types of scheduling</a></li>
+<li><a href="practice.html#pr-selection-h">Task 14: Selection function, decision mode and starvation</a></li>
+<li><a href="practice.html#pr-criteria-h">Task 15: Criteria, triggers and the long-term decisions</a></li>
+<li><a href="practice.html#pr-fbq-h">Task 16: Feedback q = 1 compared with q = 2i</a></li>
+<li><a href="practice.html#past-papers-h">Past exam questions</a></li>
+<li><a href="practice.html#tut-lec-h">Tutorial and lecture problems</a></li>
+</ul></details>
+<details class="section-nav__page is-current" open><summary><a href="quiz.html" aria-current="page">Quiz</a></summary><ul>
+<li><a href="#quiz-types-h">Kinds of scheduling and criteria</a></li>
+<li><a href="#quiz-policies-h">Selection functions and decision modes</a></li>
+<li><a href="#quiz-numbers-h">Schedules and measures</a></li>
+<li><a href="#quiz-hrrn-fb-h">HRRN and Feedback</a></li>
+<li><a href="#quiz-quantum-h">Quantum and naming the policy</a></li>
+</ul></details>
+<a class="section-nav__mock" href="index.html#mock-test">Mock test</a>
+</div></details></aside>
+  <main class="chapter-page">
+<p class="mock-jump"><strong><a href="index.html#mock-test">Mock test</a></strong>: the question paper and its solutions (PDF).</p><p>Choose or type an answer and press Check. Type numbers as digits, with two decimal places where a value is not whole (for example 2.50).</p><section id="quiz-types"><h2 id="quiz-types-h">Kinds of scheduling and criteria</h2><section id="quiz-1" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: swapping is part of medium-term scheduling." data-feedback-incorrect="Which scheduler decides how many processes are in main memory?"><h3>1. Swapping in</h3><p>A suspended process is brought back into main memory. Which scheduler made this decision?</p><div class="mcq"><p><strong>A.</strong> long-term</p><p><strong>B.</strong> medium-term</p><p><strong>C.</strong> short-term</p><p><strong>D.</strong> I/O</p></div><div class="answer-row"><label for="quiz-1-answer">Your answer <select id="quiz-1-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-2" class="quiz-card" data-component="quiz-check" data-answer="c" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: the short-term scheduler, also called the dispatcher." data-feedback-incorrect="Think of the scheduler that runs most often."><h3>2. The dispatcher</h3><p>Which scheduler decides which ready process the processor executes next?</p><div class="mcq"><p><strong>A.</strong> long-term</p><p><strong>B.</strong> medium-term</p><p><strong>C.</strong> short-term</p><p><strong>D.</strong> I/O</p></div><div class="answer-row"><label for="quiz-2-answer">Your answer <select id="quiz-2-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-3" class="quiz-card" data-component="quiz-check" data-answer="a" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: the long-term scheduler controls the degree of multiprogramming." data-feedback-incorrect="Which scheduler acts before a job even becomes a process?"><h3>3. Admitting a job</h3><p>Which scheduler decides whether to add a new job to the pool of processes to be executed?</p><div class="mcq"><p><strong>A.</strong> long-term</p><p><strong>B.</strong> medium-term</p><p><strong>C.</strong> short-term</p><p><strong>D.</strong> I/O</p></div><div class="answer-row"><label for="quiz-3-answer">Your answer <select id="quiz-3-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-4" class="quiz-card" data-component="quiz-check" data-answer="c" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: it measures the work the whole system completes, and it is easy to measure." data-feedback-incorrect="Who cares about processes per second: one user or the system?"><h3>4. Classify a criterion</h3><p>Throughput is ...</p><div class="mcq"><p><strong>A.</strong> user-oriented, performance-related</p><p><strong>B.</strong> user-oriented, other</p><p><strong>C.</strong> system-oriented, performance-related</p><p><strong>D.</strong> system-oriented, other</p></div><div class="answer-row"><label for="quiz-4-answer">Your answer <select id="quiz-4-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-5" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: a user notices it, but it is hard to measure." data-feedback-incorrect="It is noticed by a user; is it a simple number?"><h3>5. Predictability</h3><p>Predictability is ...</p><div class="mcq"><p><strong>A.</strong> user-oriented, performance-related</p><p><strong>B.</strong> user-oriented, other</p><p><strong>C.</strong> system-oriented, performance-related</p><p><strong>D.</strong> system-oriented, other</p></div><div class="answer-row"><label for="quiz-5-answer">Your answer <select id="quiz-5-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-6" class="quiz-card" data-component="quiz-check" data-answer="c" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: the triggers are clock and I/O interrupts, OS calls and signals." data-feedback-incorrect="Three of these are interrupts, calls or signals."><h3>6. Not a trigger</h3><p>Which of these does NOT call the short-term scheduler?</p><div class="mcq"><p><strong>A.</strong> a clock interrupt</p><p><strong>B.</strong> an I/O interrupt</p><p><strong>C.</strong> a new program being written to disk by a user</p><p><strong>D.</strong> a semaphore signal</p></div><div class="answer-row"><label for="quiz-6-answer">Your answer <select id="quiz-6-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section></section><section id="quiz-policies"><h2 id="quiz-policies-h">Selection functions and decision modes</h2><section id="quiz-7" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: s − e is the time still needed, and SRT picks the least." data-feedback-incorrect="s − e is the remaining time."><h3>7. min[s &minus; e]</h3><p>Which policy has the selection function min[s &minus; e]?</p><div class="mcq"><p><strong>A.</strong> SPN</p><p><strong>B.</strong> SRT</p><p><strong>C.</strong> HRRN</p><p><strong>D.</strong> FCFS</p></div><div class="answer-row"><label for="quiz-7-answer">Your answer <select id="quiz-7-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-8" class="quiz-card" data-component="quiz-check" data-answer="a" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: the process that has waited longest is the one that came first." data-feedback-incorrect="w is the waiting time so far."><h3>8. max[w]</h3><p>Which policy has the selection function max[w]?</p><div class="mcq"><p><strong>A.</strong> FCFS</p><p><strong>B.</strong> RR</p><p><strong>C.</strong> HRRN</p><p><strong>D.</strong> SPN</p></div><div class="answer-row"><label for="quiz-8-answer">Your answer <select id="quiz-8-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-9" class="quiz-card" data-component="quiz-check" data-answer="c" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: SRT checks at each arrival; RR and Feedback preempt at the time quantum." data-feedback-incorrect="Two of these use a clock."><h3>9. Preemptive at arrival</h3><p>Which policy preempts only when a new process arrives?</p><div class="mcq"><p><strong>A.</strong> RR</p><p><strong>B.</strong> Feedback</p><p><strong>C.</strong> SRT</p><p><strong>D.</strong> HRRN</p></div><div class="answer-row"><label for="quiz-9-answer">Your answer <select id="quiz-9-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-10" class="quiz-card" data-component="quiz-check" data-answer="c" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: the ratio of a waiting process keeps growing." data-feedback-incorrect="Look for the policy whose value grows with w."><h3>10. No starvation</h3><p>Which policy favours short processes but cannot starve long ones?</p><div class="mcq"><p><strong>A.</strong> SPN</p><p><strong>B.</strong> SRT</p><p><strong>C.</strong> HRRN</p><p><strong>D.</strong> Feedback</p></div><div class="answer-row"><label for="quiz-10-answer">Your answer <select id="quiz-10-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-11" class="quiz-card" data-component="quiz-check" data-answer="d" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: Feedback only uses the time already executed." data-feedback-incorrect="Which selection functions contain s?"><h3>11. Needs an estimate</h3><p>Which policy does NOT need an estimate of the service time?</p><div class="mcq"><p><strong>A.</strong> SPN</p><p><strong>B.</strong> HRRN</p><p><strong>C.</strong> SRT</p><p><strong>D.</strong> Feedback</p></div><div class="answer-row"><label for="quiz-11-answer">Your answer <select id="quiz-11-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-12" class="quiz-card" data-component="quiz-check" data-answer="a" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: a lower number means a higher priority." data-feedback-incorrect="Check the priority rule used in the course."><h3>12. Priority numbers</h3><p>In COS 122 questions, a process with priority 1 and a process with priority 4 are both ready. Which runs first?</p><div class="mcq"><p><strong>A.</strong> the one with priority 1</p><p><strong>B.</strong> the one with priority 4</p><p><strong>C.</strong> the one that arrived first</p><p><strong>D.</strong> the shorter one</p></div><div class="answer-row"><label for="quiz-12-answer">Your answer <select id="quiz-12-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-13" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: a dynamic priority based on waiting time (ageing)." data-feedback-incorrect="The remedy must reward waiting."><h3>13. Ageing</h3><p>Which change stops low-priority processes from starving?</p><div class="mcq"><p><strong>A.</strong> a smaller quantum</p><p><strong>B.</strong> raising the priority of a process as it waits</p><p><strong>C.</strong> more queues</p><p><strong>D.</strong> FCFS inside each queue</p></div><div class="answer-row"><label for="quiz-13-answer">Your answer <select id="quiz-13-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section></section><section id="quiz-numbers"><h2 id="quiz-numbers-h">Schedules and measures</h2><section id="quiz-14" class="quiz-card" data-component="quiz-check" data-answer="11|11.0|11.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: A 0 to 6, B 6 to 8, then C 8 to 11." data-feedback-incorrect="Run the processes in arrival order and add their service times."><h3>14. FCFS finish</h3><div class="table-wrap"><table class="attribute-table"><caption>Workload for questions 14 to 21</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival time</th><th scope="col">Service time</th></tr></thead><tbody><tr><td>A</td><td>0</td><td>6</td></tr><tr><td>B</td><td>1</td><td>2</td></tr><tr><td>C</td><td>3</td><td>3</td></tr><tr><td>D</td><td>4</td><td>1</td></tr></tbody></table></div><p>Under FCFS, at what time does C finish?</p><div class="answer-row"><label for="quiz-14-answer">Your answer <input id="quiz-14-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-15" class="quiz-card" data-component="quiz-check" data-answer="8|8.0|8.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: 11 − 3 = 8." data-feedback-incorrect="Turnaround = finish − arrival."><h3>15. FCFS turnaround</h3><p>Under FCFS, what is the turnaround time of C?</p><div class="answer-row"><label for="quiz-15-answer">Your answer <input id="quiz-15-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-16" class="quiz-card" data-component="quiz-check" data-answer="8|8.0|8.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: 8/1 = 8." data-feedback-incorrect="Divide the turnaround by the service time."><h3>16. FCFS normalised</h3><p>Under FCFS, what is T<sub>r</sub>/T<sub>s</sub> for D? Give two decimals if needed.</p><div class="answer-row"><label for="quiz-16-answer">Your answer <input id="quiz-16-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-17" class="quiz-card" data-component="quiz-check" data-answer="D" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: at time 6 the shortest ready process runs." data-feedback-incorrect="At time 6, list the ready processes and their service times."><h3>17. SPN order</h3><p>Under SPN, which process runs right after A? Type its letter.</p><div class="answer-row"><label for="quiz-17-answer">Your answer <input id="quiz-17-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-18" class="quiz-card" data-component="quiz-check" data-answer="3.50|3.5" data-feedback-blank="Choose or type an answer first." data-feedback-correct="The SPN schedule is A 0 to 6, D 6 to 7, B 7 to 9, C 9 to 12. Waiting = finish − arrival − service: A 6 − 0 − 6 = 0, B 9 − 1 − 2 = 6, C 12 − 3 − 3 = 6, D 7 − 4 − 1 = 2. Total 14, and 14/4 = 3.50." data-feedback-incorrect="Waiting = Tr − Ts for each process."><h3>18. SPN average waiting</h3><p>Under SPN, what is the average waiting time?</p><div class="answer-row"><label for="quiz-18-answer">Your answer <input id="quiz-18-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-19" class="quiz-card" data-component="quiz-check" data-answer="D" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: D arrives needing 1, less than the 2 that C has left, so D preempts C." data-feedback-incorrect="Compare the newcomer with the time the running process has left."><h3>19. SRT at time 4</h3><p>Under SRT, which process runs from 4 to 5? Type its letter.</p><div class="answer-row"><label for="quiz-19-answer">Your answer <input id="quiz-19-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-20" class="quiz-card" data-component="quiz-check" data-answer="12|12.0|12.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="A runs 0 to 1. At 1, B needs 2, less than the 5 A has left, so B runs 1 to 3. At 3 C (3) is the shortest and runs. At 4, D needs 1, less than C&#x27;s 2, so D runs 4 to 5, then C runs 5 to 7. A, with 5 left, runs from 7 to 12." data-feedback-incorrect="Draw the whole SRT schedule; A is preempted."><h3>20. SRT finish of A</h3><p>Under SRT, at what time does A finish?</p><div class="answer-row"><label for="quiz-20-answer">Your answer <input id="quiz-20-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-21" class="quiz-card" data-component="quiz-check" data-answer="A" data-feedback-blank="Choose or type an answer first." data-feedback-correct="A runs 0 to 2 (B arrives at 1 and waits). At 2, A&#x27;s quantum ends and A goes behind B, so B runs 2 to 4. C arrives at 3 and joins behind A. At 4, B finishes and D arrives behind C. The queue is A, C, D, so A runs from 4 to 5." data-feedback-incorrect="Write the queue after each quantum ends."><h3>21. RR q = 2</h3><p>Under RR with q = 2, which process runs from 4 to 5? (A new arrival joins the queue before a process whose quantum ends at the same time.)</p><div class="answer-row"><label for="quiz-21-answer">Your answer <input id="quiz-21-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section></section><section id="quiz-hrrn-fb"><h2 id="quiz-hrrn-fb-h">HRRN and Feedback</h2><section id="quiz-22" class="quiz-card" data-component="quiz-check" data-answer="1.75" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: (3 + 4)/4 = 1.75." data-feedback-incorrect="w = 4 − arrival; R = (w + s)/s."><h3>22. A ratio</h3><div class="table-wrap"><table class="attribute-table"><caption>Workload for questions 22 to 26</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival time</th><th scope="col">Service time</th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>4</td></tr><tr><td>P2</td><td>1</td><td>4</td></tr><tr><td>P3</td><td>2</td><td>6</td></tr><tr><td>P4</td><td>3</td><td>1</td></tr></tbody></table></div><p>HRRN runs P1 from 0 to 4. What is the response ratio of P2 at time 4? Give two decimals.</p><div class="answer-row"><label for="quiz-22-answer">Your answer <input id="quiz-22-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-23" class="quiz-card" data-component="quiz-check" data-answer="2|2.0|2.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: (1 + 1)/1 = 2." data-feedback-incorrect="P4 arrived at 3."><h3>23. Another ratio</h3><p>What is the response ratio of P4 at time 4?</p><div class="answer-row"><label for="quiz-23-answer">Your answer <input id="quiz-23-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-24" class="quiz-card" data-component="quiz-check" data-answer="P4" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: it has the highest ratio." data-feedback-incorrect="Compare all three ratios."><h3>24. HRRN choice</h3><p>Which process does HRRN run at time 4?</p><div class="answer-row"><label for="quiz-24-answer">Your answer <input id="quiz-24-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-25" class="quiz-card" data-component="quiz-check" data-answer="P1" data-feedback-blank="Choose or type an answer first." data-feedback-correct="P1, P2 and P3 each use their quantum of 1 in RQ0 and move down to RQ1, in that order. P4 arrives at 3, runs 3 to 4 from RQ0 and finishes. At 4, RQ0 is empty and P1 is at the front of RQ1, so P1 runs (q = 2)." data-feedback-incorrect="Track RQ0, RQ1 and RQ2 separately."><h3>25. Feedback q = 2^i</h3><p>Feedback, q = 2<sup>i</sup>, unlimited queues, a process alone keeps its queue. Which process runs from 4 to 5?</p><div class="answer-row"><label for="quiz-25-answer">Your answer <input id="quiz-25-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-26" class="quiz-card" data-component="quiz-check" data-answer="15|15.0|15.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="From 0 to 4, P1, P2, P3 and P4 each run one unit from RQ0; P4 finishes at 4. P1, P2 and P3 then take one unit each in RQ1 (4 to 7) and in RQ2 (7 to 10). In RQ3, P1 runs 10 to 11 and finishes, and P2 runs 11 to 12 and finishes. P3 has 3 units left; nothing else is waiting, so it stays in RQ3 and runs 12 to 15." data-feedback-incorrect="Write the queues after each unit."><h3>26. Feedback q = 1</h3><p>Feedback, q = 1, unlimited queues, a process alone keeps its queue. At what time does P3 finish?</p><div class="answer-row"><label for="quiz-26-answer">Your answer <input id="quiz-26-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section></section><section id="quiz-quantum"><h2 id="quiz-quantum-h">Quantum and naming the policy</h2><section id="quiz-27" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: no process is ever preempted." data-feedback-incorrect="What happens if no quantum ever runs out?"><h3>27. Large quantum</h3><p>If the quantum is at least the longest service time, round robin behaves like ...</p><div class="mcq"><p><strong>A.</strong> SPN</p><p><strong>B.</strong> FCFS</p><p><strong>C.</strong> SRT</p><p><strong>D.</strong> HRRN</p></div><div class="answer-row"><label for="quiz-27-answer">Your answer <select id="quiz-27-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-28" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: each quantum end is a possible switch." data-feedback-incorrect="Count how often the clock interrupts."><h3>28. Small quantum</h3><p>A small quantum mainly causes ...</p><div class="mcq"><p><strong>A.</strong> fewer process switches</p><p><strong>B.</strong> more process switches and more overhead</p><p><strong>C.</strong> starvation</p><p><strong>D.</strong> non-preemptive behaviour</p></div><div class="answer-row"><label for="quiz-28-answer">Your answer <select id="quiz-28-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-29" class="quiz-card" data-component="quiz-check" data-answer="17|17.0|17.00" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: with q = 10 no process is preempted, so this is FCFS." data-feedback-incorrect="q = 10 is at least every service time."><h3>29. Round robin, q = 10 workload</h3><div class="table-wrap"><table class="attribute-table"><thead><tr><th scope="col">Process</th><th scope="col">Arrival time</th><th scope="col">Service time</th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>10</td></tr><tr><td>P2</td><td>1</td><td>6</td></tr><tr><td>P3</td><td>3</td><td>8</td></tr><tr><td>P4</td><td>6</td><td>4</td></tr></tbody></table></div><p>What is the average turnaround time for RR with q = 10? Give two decimals.</p><div class="answer-row"><label for="quiz-29-answer">Your answer <input id="quiz-29-answer" data-quiz-answer type="text" autocomplete="off" spellcheck="false"></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section><section id="quiz-30" class="quiz-card" data-component="quiz-check" data-answer="b" data-feedback-blank="Choose or type an answer first." data-feedback-correct="Right: C interrupts B at time 4, when C arrives." data-feedback-incorrect="Is any process interrupted? When?"><h3>30. Name the policy</h3><p>For the textbook workload (A 0/3, B 2/6, C 4/4, D 6/5, E 8/2), which policy gives this schedule?</p><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 790 64" width="790" height="64" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="time-scale strip">
+<rect x="15" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="34.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">A</text>
+<rect x="53" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="72.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">A</text>
+<rect x="91" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="110.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">A</text>
+<rect x="129" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="148.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">B</text>
+<rect x="167" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="186.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">C</text>
+<rect x="205" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="224.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">C</text>
+<rect x="243" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="262.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">C</text>
+<rect x="281" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="300.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">C</text>
+<rect x="319" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="338.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">E</text>
+<rect x="357" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="376.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">E</text>
+<rect x="395" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="414.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">B</text>
+<rect x="433" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="452.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">B</text>
+<rect x="471" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="490.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">B</text>
+<rect x="509" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="528.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">B</text>
+<rect x="547" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="566.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">B</text>
+<rect x="585" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="604.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">D</text>
+<rect x="623" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="642.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">D</text>
+<rect x="661" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="680.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">D</text>
+<rect x="699" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="718.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">D</text>
+<rect x="737" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="756.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">D</text>
+<text x="15" y="52" text-anchor="middle" fill="#1f2933">00</text>
+<text x="53" y="52" text-anchor="middle" fill="#1f2933">01</text>
+<text x="91" y="52" text-anchor="middle" fill="#1f2933">02</text>
+<text x="129" y="52" text-anchor="middle" fill="#1f2933">03</text>
+<text x="167" y="52" text-anchor="middle" fill="#1f2933">04</text>
+<text x="205" y="52" text-anchor="middle" fill="#1f2933">05</text>
+<text x="243" y="52" text-anchor="middle" fill="#1f2933">06</text>
+<text x="281" y="52" text-anchor="middle" fill="#1f2933">07</text>
+<text x="319" y="52" text-anchor="middle" fill="#1f2933">08</text>
+<text x="357" y="52" text-anchor="middle" fill="#1f2933">09</text>
+<text x="395" y="52" text-anchor="middle" fill="#1f2933">10</text>
+<text x="433" y="52" text-anchor="middle" fill="#1f2933">11</text>
+<text x="471" y="52" text-anchor="middle" fill="#1f2933">12</text>
+<text x="509" y="52" text-anchor="middle" fill="#1f2933">13</text>
+<text x="547" y="52" text-anchor="middle" fill="#1f2933">14</text>
+<text x="585" y="52" text-anchor="middle" fill="#1f2933">15</text>
+<text x="623" y="52" text-anchor="middle" fill="#1f2933">16</text>
+<text x="661" y="52" text-anchor="middle" fill="#1f2933">17</text>
+<text x="699" y="52" text-anchor="middle" fill="#1f2933">18</text>
+<text x="737" y="52" text-anchor="middle" fill="#1f2933">19</text>
+<text x="775" y="52" text-anchor="middle" fill="#1f2933">20</text>
+</svg></div><figcaption>Schedule to name.</figcaption></figure><div class="mcq"><p><strong>A.</strong> SPN</p><p><strong>B.</strong> SRT</p><p><strong>C.</strong> HRRN</p><p><strong>D.</strong> RR q = 4</p></div><div class="answer-row"><label for="quiz-30-answer">Your answer <select id="quiz-30-answer" data-quiz-answer><option value="">Choose</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></label><button type="button" data-quiz-submit>Check</button></div><p class="feedback" data-quiz-feedback aria-live="polite"></p></section></section>
+  </main>
+  <footer class="site-footer"><div class="site-footer__inner">Swift Tuition | COS 122 Operating Systems</div></footer>
+  <script>
+(function () {
+  'use strict';
+
+  var CPP98_SAMPLE = '#include <iostream>\n\nint main() {\n    int number = 4;\n    number = number + 1;\n    std::cout << number << "\\n";\n    return 0;\n}\n';
+  function query(host, selector) { return host.querySelector(selector); }
+  function setText(element, value) { if (element) { element.textContent = value; } }
+  function announce(element, message, busy) {
+    if (!element) { return; }
+    element.textContent = message;
+    element.setAttribute('aria-live', 'polite');
+    element.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+  function normalise(value) { return String(value || '').replace(/\s+/g, '').toLowerCase(); }
+  function control(host, name, alternatives) {
+    return query(host, '[data-' + name + ']') || query(host, alternatives || '');
+  }
+
+  function initHighlighting() {
+    var grammar = window.COS110Cpp98Grammar;
+    document.querySelectorAll('[data-component="cpp-highlight"]').forEach(function (host) {
+      var code = host.matches('code, pre') ? host : query(host, 'code');
+      if (!code || !grammar) { return; }
+      var rawCode = code.textContent;
+      code.dataset.cppSource = rawCode;
+      code.innerHTML = grammar.highlight(rawCode);
+      code.classList.add('cpp98-code');
+    });
+  }
+
+  function initMemorySteppers() {
+    document.querySelectorAll('[data-component="memory-stepper"]').forEach(function (host) {
+      var steps = Array.prototype.slice.call(host.querySelectorAll('[data-memory-step], .memory-step'));
+      if (!steps.length) { return; }
+      var previous = control(host, 'memory-prev', '[data-step-prev]');
+      var next = control(host, 'memory-next', '[data-step-next]');
+      var status = control(host, 'memory-status', '[data-step-status]');
+      var activeIndex = 0;
+      host.setAttribute('role', 'group');
+      host.setAttribute('aria-roledescription', 'memory sequence');
+      function render(index, focusStep) {
+        activeIndex = Math.max(0, Math.min(index, steps.length - 1));
+        steps.forEach(function (step, stepIndex) {
+          var active = stepIndex === activeIndex;
+          step.hidden = !active;
+          step.tabIndex = active ? 0 : -1;
+          step.setAttribute('aria-current', active ? 'step' : 'false');
+        });
+        if (previous) { previous.disabled = activeIndex === 0; }
+        if (next) { next.disabled = activeIndex === steps.length - 1; }
+        announce(status, 'Step ' + (activeIndex + 1) + ' of ' + steps.length + '.', false);
+        if (focusStep) { steps[activeIndex].focus(); }
+      }
+      if (previous) { previous.addEventListener('click', function () { render(activeIndex - 1, true); }); }
+      if (next) { next.addEventListener('click', function () { render(activeIndex + 1, true); }); }
+      host.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowLeft') { event.preventDefault(); render(activeIndex - 1, true); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); render(activeIndex + 1, true); }
+        if (event.key === 'Home') { event.preventDefault(); render(0, true); }
+        if (event.key === 'End') { event.preventDefault(); render(steps.length - 1, true); }
+      });
+      render(0, false);
+    });
+  }
+
+  function initRunners() {
+    document.querySelectorAll('[data-component="cpp-runner"]').forEach(function (host) {
+      var code = control(host, 'runner-code', 'textarea, [contenteditable="true"]');
+      var run = control(host, 'runner-run', 'button[type="submit"]');
+      var reset = control(host, 'runner-reset');
+      var copy = control(host, 'runner-copy');
+      var output = control(host, 'runner-output', 'output, pre');
+      var prediction = control(host, 'runner-prediction');
+      var fallback = control(host, 'runner-fallback');
+      var highlightedCode = query(host, '[data-runner-highlight] code');
+      var grammar = window.COS110Cpp98Grammar;
+      if (!code) { return; }
+      var originalCode = code.value !== undefined ? code.value : code.textContent;
+      originalCode = originalCode.trim() || CPP98_SAMPLE;
+      function readCode() { return code.value !== undefined ? code.value : code.textContent; }
+      function updateHighlight(value) {
+        if (!highlightedCode) { return; }
+        highlightedCode.innerHTML = grammar ? grammar.highlight(value) : value.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      }
+      function writeCode(value) { if (code.value !== undefined) { code.value = value; } else { code.textContent = value; } updateHighlight(value); }
+      function fallbackMessage() {
+        return 'If no result appears, keep changing the numbers and trace the statements one at a time.';
+      }
+      function reportFallback(message) { announce(fallback, message || fallbackMessage(), false); }
+      writeCode(originalCode);
+      reportFallback();
+      code.addEventListener('input', function () { updateHighlight(readCode()); });
+      code.addEventListener('scroll', function () {
+        var highlightedLayer = query(host, '[data-runner-highlight]');
+        if (highlightedLayer) { highlightedLayer.scrollTop = code.scrollTop; highlightedLayer.scrollLeft = code.scrollLeft; }
+      });
+      if (run) {
+        run.addEventListener('click', function (event) {
+          event.preventDefault();
+          var source = readCode();
+          if (!source.trim()) { announce(output, 'Add code before running it.', false); reportFallback(); return; }
+          run.disabled = true;
+          announce(output, 'Getting a result…', true);
+          reportFallback('Running your changed code…');
+          fetch('https://wandbox.org/api/compile.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              compiler: 'gcc-12.3.0',
+              code: source,
+              'compiler-option-raw': '-std=c++98\n-Wall\n-Wextra\n-pedantic'
+            })
+          }).then(function (response) {
+            if (!response.ok) { throw new Error('No result was received.'); }
+            return response.json();
+          }).then(function (result) {
+            var compilerText = (result.compiler_error || result.compiler_output || '').trim();
+            var programText = (result.program_output || result.program_error || result.status || '').trim();
+            if (result.status === '0' || result.status === 0) {
+              announce(output, programText || '(The program produced no output.)', false);
+              reportFallback('Result received. Change one number and run it again.');
+            } else {
+              announce(output, compilerText || programText || 'The code needs a fix before it can run.', false);
+              reportFallback('Check one change at a time. ' + fallbackMessage());
+            }
+          }).catch(function () {
+            announce(output, 'No result was received right now.', false);
+            reportFallback();
+          }).finally(function () { run.disabled = false; });
+        });
+      }
+      if (reset) {
+        reset.addEventListener('click', function (event) {
+          event.preventDefault(); writeCode(originalCode);
+          if (prediction) { prediction.value = ''; }
+          announce(output, 'Ready. Change a number, then run the code.', false); reportFallback();
+        });
+      }
+      if (copy) {
+        copy.addEventListener('click', function (event) {
+          event.preventDefault();
+          var source = readCode();
+          var copied = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(source) : Promise.reject();
+          copied.then(function () { announce(output, 'Code copied.', false); }).catch(function () {
+            if (code.select) { code.select(); document.execCommand('copy'); announce(output, 'Code copied.', false); }
+            else { announce(output, 'Copy is unavailable. Select the code and copy it manually.', false); }
+          });
+        });
+      }
+    });
+  }
+
+  function initPracticeReveals() {
+    document.querySelectorAll('[data-component="practice-reveal"]').forEach(function (host) {
+      var toggle = control(host, 'practice-toggle', 'button');
+      var solution = control(host, 'practice-solution', '.practice-solution');
+      if (!toggle || !solution) { return; }
+      var solutionId = solution.id || 'practice-solution-' + Math.random().toString(36).slice(2);
+      solution.id = solutionId;
+      toggle.setAttribute('aria-controls', solutionId);
+      function render(revealed) { solution.hidden = !revealed; toggle.setAttribute('aria-expanded', String(revealed)); }
+      toggle.addEventListener('click', function () { render(solution.hidden); });
+      render(false);
+    });
+  }
+
+  function initQuizzes() {
+    document.querySelectorAll('[data-component="quiz-check"]').forEach(function (card) {
+      var answer = control(card, 'quiz-answer', 'input, textarea, select');
+      var submit = control(card, 'quiz-submit', 'button[type="submit"]');
+      var feedback = control(card, 'quiz-feedback', '[role="status"], .quiz-feedback');
+      var key = card.dataset.answer || card.dataset.correctAnswer || '';
+      if (!answer || !feedback || !key) { return; }
+      function show(state) {
+        var message = card.dataset['feedback' + state] || '';
+        feedback.dataset.state = state.toLowerCase();
+        announce(feedback, message, false);
+        answer.setAttribute('aria-invalid', state === 'Incorrect' ? 'true' : 'false');
+      }
+      function check(event) {
+        if (event) { event.preventDefault(); }
+        var given = normalise(answer.value);
+        if (!given) { show('Blank'); return; }
+        var acceptable = key.split('|').map(normalise);
+        show(acceptable.indexOf(given) !== -1 ? 'Correct' : 'Incorrect');
+      }
+      if (submit) { submit.addEventListener('click', check); }
+      var form = card.closest('form');
+      if (form) { form.addEventListener('submit', check); }
+    });
+  }
+
+  function init() { initHighlighting(); initMemorySteppers(); initRunners(); initPracticeReveals(); initQuizzes(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+}());
+
+/* Contents sidebar: open on wide screens, close after a jump on small ones, mark the section in view. */
+(function () {
+  var nav = document.querySelector('.section-nav'); if (!nav) return;
+  var box = nav.querySelector('.section-nav__box');
+  var wide = window.matchMedia('(min-width: 1340px)');
+  function fit() { box.open = wide.matches; }
+  fit(); if (wide.addEventListener) wide.addEventListener('change', fit);
+  nav.addEventListener('click', function (e) {
+    var a = e.target.closest('a'); if (a && !wide.matches && a.getAttribute('href').charAt(0) === '#') box.open = false;
+  });
+  var links = nav.querySelectorAll('.is-current ul a'); if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {}; links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var seen = new Set();
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) seen.add(en.target.id); else seen.delete(en.target.id); });
+    var first = null; links.forEach(function (a) { var id = a.getAttribute('href').slice(1); if (!first && seen.has(id)) first = a; });
+    if (first) { links.forEach(function (a) { a.classList.toggle('is-active', a === first); }); }
+  }, { rootMargin: '-100px 0px -55% 0px' });
+  Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+
+  </script>
+</body>
+</html>

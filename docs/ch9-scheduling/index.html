@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uniprocessor Scheduling | COS 122</title>
+  <style>
+:root {
+  --page: #f8f5ef;
+  --paper: #fffdfa;
+  --ink: #2f2925;
+  --muted: #6e6258;
+  --rule: #d9cfc2;
+  --wine: #8b2252;
+  --green: #276248;
+  --blue: #24527a;
+  --orange: #a94e24;
+  --teal: #086d72;
+  --heading: Georgia, serif;
+  --body: Georgia, serif;
+  --label: Arial, sans-serif;
+  --mono: Consolas, "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--page); }
+body { margin: 0; color: var(--ink); font: 18px/1.65 var(--body); }
+a { color: var(--wine); text-underline-offset: 2px; }
+button, input, textarea { font: inherit; }
+
+.site-header { position: sticky; top: 0; z-index: 10; background: rgba(248, 245, 239, .98); border-bottom: 3px solid var(--wine); }
+.site-header__inner, .page-head, .page-tabs__inner, .chapter-page, .site-footer__inner { max-width: 980px; margin: 0 auto; padding-right: 1.25rem; padding-left: 1.25rem; }
+.site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: .7rem; padding-bottom: .7rem; }
+.brand { display: grid; gap: .05rem; }
+.brand__name, .eyebrow, .block__label, .difficulty, .question-label { font: 700 .7rem/1.3 var(--label); letter-spacing: .1em; text-transform: uppercase; }
+.brand__name, .eyebrow { color: var(--wine); }
+.brand__chapter { font: 700 1.08rem/1.15 var(--heading); }
+.site-header__tag { color: var(--muted); font: .78rem/1.3 var(--label); text-align: right; }
+
+.page-head { padding-top: 1rem; padding-bottom: .45rem; }
+.page-title { margin: .3rem 0; font: 700 1.95rem/1.15 var(--heading); }
+.page-subtitle { max-width: 48rem; margin: 0; color: var(--muted); }
+.page-tabs { position: sticky; top: 59px; z-index: 9; background: rgba(248, 245, 239, .98); border-bottom: 1px solid var(--rule); }
+.page-tabs__inner { display: flex; overflow-x: auto; padding-top: 0; padding-bottom: 0; scrollbar-width: none; }
+.page-tabs__inner::-webkit-scrollbar { display: none; }
+.page-tabs a { padding: .7rem 1rem; color: var(--muted); border-bottom: 2px solid transparent; font: 700 .76rem/1 var(--label); letter-spacing: .07em; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+.page-tabs a:hover, .page-tabs a[aria-current="page"] { color: var(--wine); border-bottom-color: var(--wine); }
+
+.chapter-page { padding-top: 1.5rem; padding-bottom: 4rem; }
+h2, h3 { font-family: var(--heading); line-height: 1.25; }
+h2 { margin: 1.8rem 0 .7rem; font-size: 1.35rem; }
+h3 { margin: 1.15rem 0 .5rem; font-size: 1.08rem; }
+p { margin: 0 0 1rem; }
+ul, ol { padding-left: 1.4rem; }
+li + li { margin-top: .4rem; }
+code, pre, textarea { font-family: var(--mono); }
+code { padding: .08rem .28rem; color: var(--teal); background: #e8f3f3; border-radius: 3px; }
+pre { overflow-x: auto; margin: 0; padding: 1rem; color: #f7f6f1; background: #1f2528; border-radius: 6px; }
+
+.block { margin: 1.15rem 0; padding: .9rem 1rem; border-left: 4px solid var(--rule); border-radius: 0 6px 6px 0; background: #f4eee6; }
+.block__label { margin: 0 0 .25rem; }
+.block--definition { border-color: var(--wine); }
+.block--method { border-color: var(--blue); }
+.block--caution { border-color: var(--orange); }
+.block--check { border-color: var(--green); }
+.two-col, .reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.comparison, .example, .practice-set, .quiz-card, .reference-card, .runner-card { padding: 1rem 1.1rem; border: 1px solid var(--rule); border-radius: 7px; background: var(--paper); }
+.comparison h3, .example h2, .practice-set h2, .quiz-card h2, .reference-card h3, .runner-card h2 { margin-top: 0; }
+.example, .quiz-card, .runner-card { margin: 1.35rem 0; }
+.difficulty { display: inline-block; padding: .22rem .45rem; border-radius: 3px; }
+.difficulty--easy { color: var(--green); background: #e2f0e8; }
+.difficulty--medium { color: var(--blue); background: #e4eef7; }
+.difficulty--hard { color: var(--orange); background: #f7e9df; }
+.question { padding: 1rem 0; border-top: 1px solid var(--rule); }
+.question:first-of-type { border-top: 0; }
+.question-label { margin: 0 0 .35rem; color: var(--muted); }
+.hint { color: var(--muted); font-size: .94rem; }
+.reveal { margin-top: .85rem; overflow: hidden; border: 1px solid var(--rule); border-radius: 6px; }
+.reveal__toggle { display: flex; width: 100%; justify-content: space-between; padding: .68rem .85rem; color: var(--wine); background: #f3ece4; border: 0; cursor: pointer; font: 700 .78rem/1.2 var(--label); letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+.reveal__body { padding: .9rem 1rem; border-top: 1px solid var(--rule); }
+.answer-row, .runner-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .75rem; }
+input[type="text"], input[type="number"], textarea { width: min(30rem, 100%); padding: .55rem .65rem; border: 1px solid #a99a8b; border-radius: 4px; background: #fff; }
+textarea { min-height: 7.5rem; resize: vertical; }
+button { padding: .55rem .75rem; color: #fff; border: 1px solid var(--wine); border-radius: 4px; background: var(--wine); cursor: pointer; font: 700 .78rem/1.2 var(--label); letter-spacing: .04em; text-transform: uppercase; }
+button[data-runner-reset], button[data-memory-prev], button[data-memory-next] { color: var(--blue); border-color: #93adbf; background: #eef5f9; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.feedback, .runner-output, .runner-fallback, .memory-status { min-height: 1.55rem; margin: .6rem 0 0; color: var(--muted); font: .9rem/1.4 var(--label); }
+.mcq { display: grid; gap: .55rem; }
+.mcq label { display: flex; align-items: flex-start; gap: .55rem; }
+.teaching-figure { max-width: 850px; margin: 1.3rem auto; padding: .8rem; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+.teaching-figure img { display: block; width: 100%; height: auto; }
+.teaching-figure figcaption { margin-top: .65rem; color: var(--muted); font: .92rem/1.45 var(--label); }
+.code-caption { margin-top: .65rem; color: var(--muted); font: .92rem/1.45 var(--label); }
+.site-footer { border-top: 1px solid var(--rule); color: var(--muted); font: .8rem/1.4 var(--label); }
+.site-footer__inner { padding-top: 1rem; padding-bottom: 1.2rem; }
+
+@media (max-width: 650px) {
+  body { font-size: 17px; }
+  .site-header__tag { display: none; }
+  .page-title { font-size: 1.55rem; }
+  h2 { font-size: 1.24rem; }
+  .page-tabs { top: 52px; }
+  .two-col, .reference-grid { grid-template-columns: 1fr; }
+}
+
+/* Shared, accessible computing components for the content-light prototype. */
+.cpp98-code { display: block; overflow-x: auto; padding: 1rem; border-radius: .75rem; background: #14212f; color: #eef5f8; font: .9rem/1.58 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; tab-size: 4; }
+.tok-preprocessor { color: #8ad7ff; }.tok-keyword { color: #ff9f80; }.tok-type { color: #8ee0ae; }.tok-function { color: #ffd37a; }.tok-string, .tok-character { color: #c8df85; }.tok-number { color: #dca9ff; }.tok-comment { color: #aeb8c0; font-style: italic; }.tok-operator { color: #f0eff1; }
+[data-component="memory-stepper"] { border: 1px solid #b9c9d4; border-radius: 1rem; background: #f7fbfd; padding: 1rem; }
+[data-memory-step], .memory-step { outline: none; min-height: 8rem; padding: .9rem; border-radius: .6rem; background: #fff; border: 1px solid #d8e4eb; }
+[data-memory-status], [data-step-status] { display: block; margin: .7rem 0; color: #365166; font-weight: 650; }
+[data-component="cpp-runner"] { border: 1px solid #b9c9d4; border-radius: 1rem; background: #f7fbfd; padding: 1rem; }
+.code-editor { position: relative; min-height: 12rem; overflow: hidden; border: 1px solid #7891a3; border-radius: .55rem; background: #14212f; }
+.code-editor:focus-within { outline: 3px solid #e49c19; outline-offset: 3px; }
+[data-runner-highlight] { display: block; min-height: 12rem; max-height: 24rem; margin: 0; padding: 0; overflow: auto; border-radius: 0; background: transparent; }
+[data-runner-highlight] code { display: block; min-width: max-content; min-height: 12rem; padding: .9rem; white-space: pre; font: .9rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; }
+[data-runner-code] { position: absolute; inset: 0; width: 100%; min-height: 12rem; margin: 0; padding: .9rem; border: 0; border-radius: 0; resize: none; overflow: auto; background: transparent; color: transparent; caret-color: #eef5f8; font: .9rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; }
+[data-runner-code]::selection { background: rgba(228, 156, 25, .38); color: transparent; }
+[data-runner-output] { display: block; min-height: 3.25rem; margin-top: .7rem; padding: .8rem; white-space: pre-wrap; border-left: .25rem solid #216b84; background: #fff; color: #172b3a; }
+[data-runner-fallback] { margin-top: .7rem; color: #365166; font-size: .92rem; }
+[data-component="cpp-runner"] button, [data-component="memory-stepper"] button, [data-component="practice-reveal"] button, [data-component="quiz-check"] button { min-height: 2.65rem; margin: .65rem .4rem 0 0; padding: .55rem .9rem; border: 1px solid #165d78; border-radius: .45rem; background: #165d78; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+[data-component] button:hover:not(:disabled) { background: #0f4a62; } [data-component] button:disabled { opacity: .55; cursor: not-allowed; } [data-component] button:focus-visible, [data-component] input:focus-visible, [data-memory-step]:focus-visible { outline: 3px solid #e49c19; outline-offset: 3px; }
+[data-practice-solution], .practice-solution { margin-top: .8rem; padding: 1rem; border-left: .3rem solid #1d7962; background: #edf8f4; }
+[data-quiz-feedback][data-state="correct"] { color: #0b6047; font-weight: 700; } [data-quiz-feedback][data-state="incorrect"], .quiz-feedback[data-state="incorrect"] { color: #9b2d20; font-weight: 700; } [data-quiz-feedback][data-state="blank"], .quiz-feedback[data-state="blank"] { color: #6a4a00; font-weight: 700; }
+@media (max-width: 42rem) { .code-editor, [data-runner-highlight], [data-runner-highlight] code, [data-runner-code] { min-height: 15rem; } [data-runner-highlight] code, [data-runner-code] { font-size: .82rem; } }
+
+.route { margin: 0 0 2.25rem; }
+.route > h2 { margin-bottom: .45rem; }
+.route-stage { margin: 1rem 0; }
+.route-stage > :first-child { margin-top: 0; }
+.route-stage > :last-child { margin-bottom: 0; }
+
+.code-visual-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, .8fr);
+  gap: 1rem;
+  align-items: start;
+  margin: 1.25rem 0;
+}
+.code-visual-pair > [data-pair] { min-width: 0; }
+.code-visual-pair > [data-pair="interpretation"] { grid-column: 1 / -1; }
+.code-visual-pair figure { margin: 0; overflow: visible; }
+.code-visual-pair img,
+.drawing-model img,
+.checked-visual img { display: block; width: 100%; height: auto; }
+
+.construction-steps { padding-left: 1.4rem; }
+.construction-steps li + li { margin-top: .45rem; }
+.attempt-surface {
+  min-height: 7rem;
+  padding: 1rem;
+  border: 2px dashed var(--rule);
+  border-radius: 7px;
+  background: #fff;
+}
+.partial-model { color: var(--muted); }
+.checked-visual { margin: 1rem 0 0; }
+
+.code-visual-pair img { max-width: 21rem; margin-inline: auto; }
+.drawing-model img,
+.checked-visual img { max-width: 24rem; margin-inline: auto; }
+
+@media (max-width: 650px) {
+  .page-tabs__inner {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding-inline: .5rem;
+    overflow: visible;
+  }
+  .page-tabs a {
+    padding: 1rem .2rem;
+    text-align: center;
+    font-size: .75rem;
+    letter-spacing: .02em;
+  }
+  .code-visual-pair { grid-template-columns: 1fr; }
+  .code-visual-pair > [data-pair="interpretation"] { grid-column: auto; }
+}
+/* Practical 3: bordered attribute and output-reasoning tables. */
+.attribute-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 1rem 0; border: 2px solid #9b8777; background: var(--paper); }
+.attribute-table th, .attribute-table td { border: 1px solid #b9a898; padding: .7rem .8rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.attribute-table th { background: #eee5d9; font-weight: 700; }
+.attribute-table tbody tr:nth-child(even) { background: #f7f1e8; }
+.attribute-table caption { text-align: left; font-weight: 700; padding: .4rem 0; }
+@media (max-width: 650px) { .attribute-table th, .attribute-table td { padding: .45rem .35rem; font-size: .88rem; } }
+
+
+/* Contents sidebar (section-nav add-on). */
+.section-nav { font: .86rem/1.35 var(--label); }
+.section-nav__box { border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); }
+.section-nav__box > summary { cursor: pointer; padding: .6rem .8rem; color: var(--wine); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; font-size: .74rem; list-style: none; }
+.section-nav__box > summary::-webkit-details-marker, .section-nav__page > summary::-webkit-details-marker { display: none; }
+.section-nav__box > summary::before { content: "\25B8"; display: inline-block; width: 1.1em; transition: transform .15s; }
+.section-nav__box[open] > summary::before { transform: rotate(90deg); }
+.section-nav__body { padding: 0 .5rem .6rem; }
+.section-nav__page { margin: .1rem 0; }
+.section-nav__page > summary { cursor: pointer; padding: .3rem .4rem; border-radius: 5px; color: var(--ink); font-weight: 700; list-style: none; }
+.section-nav__page > summary::before { content: "\25B8"; display: inline-block; width: 1em; color: var(--muted); transition: transform .15s; }
+.section-nav__page[open] > summary::before { transform: rotate(90deg); }
+.section-nav__page > summary a { color: inherit; text-decoration: none; }
+.section-nav__page.is-current > summary { background: rgba(139, 34, 82, .08); color: var(--wine); }
+.section-nav ul { list-style: none; margin: .1rem 0 .3rem; padding: 0 0 0 1.35rem; }
+.section-nav li + li { margin-top: 0; }
+.section-nav ul a { display: block; padding: .22rem .4rem; border-left: 2px solid var(--rule); color: var(--muted); text-decoration: none; }
+.section-nav ul a:hover { color: var(--wine); border-left-color: var(--wine); }
+.section-nav ul a.is-active { color: var(--wine); border-left-color: var(--wine); font-weight: 700; }
+.section-nav__mock { display: block; margin: .4rem .4rem 0; padding: .35rem .4rem; border-top: 1px solid var(--rule); color: var(--wine); font-weight: 700; text-decoration: none; }
+h2[id], section[id] { scroll-margin-top: 110px; }
+
+/* Wide screens: fixed column to the left of the 980px page. */
+@media (min-width: 1340px) {
+  .section-nav { position: fixed; top: 112px; left: max(.75rem, calc(50vw - 490px - 250px)); width: min(230px, calc(50vw - 490px - 1.5rem)); max-height: calc(100vh - 128px); overflow-y: auto; z-index: 8; }
+}
+/* Narrower screens: a button bottom-left that opens the same list as a panel. */
+@media (max-width: 1339px) {
+  .section-nav { position: fixed; left: .75rem; bottom: .75rem; z-index: 20; max-width: min(320px, calc(100vw - 1.5rem)); }
+  .section-nav__box { box-shadow: 0 2px 10px rgba(47, 41, 37, .18); }
+  .section-nav__box[open] .section-nav__body { max-height: 65vh; overflow-y: auto; }
+}
+@media print { .section-nav { display: none; } }
+
+.svg-scroll { overflow-x: auto; }
+.svg-figure svg { display: block; max-width: none; margin: 0 auto; height: auto; }
+.table-wrap { overflow-x: auto; }
+.decision-table { table-layout: auto; }
+.decision-table td:first-child { white-space: nowrap; font-weight: 700; }
+.attribute-table td sub, .attribute-table th sub { font-size: .7em; }
+.cells { font-family: var(--mono); background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; white-space: nowrap; }
+.answer-key { color: var(--green); font-weight: 700; }
+.mock-jump { margin: 0 0 1rem; }
+
+  </style>
+</head>
+<body data-current-page="index">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand"><span class="brand__name">Swift Tuition</span><span class="brand__chapter">COS 122</span></div>
+      <span class="site-header__tag">Operating Systems</span>
+    </div>
+  </header>
+  <header class="page-head">
+    <p class="eyebrow">COS 122 · Chapter 9</p>
+    <h1 class="page-title">Uniprocessor Scheduling</h1>
+    <p class="page-subtitle">COS 122 Operating Systems exam notes 2026</p>
+  </header>
+  <nav class="page-tabs" aria-label="Page navigation"><div class="page-tabs__inner"><a href="index.html" aria-current="page">Home</a><a href="theory.html">Theory</a><a href="examples.html">Examples</a><a href="practice.html">Practice</a><a href="quiz.html">Quiz</a></div></nav>
+<aside class="section-nav" aria-label="Contents">
+<details class="section-nav__box"><summary>Contents</summary><div class="section-nav__body">
+<details class="section-nav__page is-current" open><summary><a href="index.html" aria-current="page">Home</a></summary><ul>
+<li><a href="#home-topic">Uniprocessor Scheduling</a></li>
+<li><a href="#home-order">Suggested order</a></li>
+<li><a href="#mock-test-h">Mock test</a></li>
+<li><a href="#rules-h">Rules used in every answer</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="theory.html">Theory</a></summary><ul>
+<li><a href="theory.html#types">Four kinds of scheduling</a></li>
+<li><a href="theory.html#criteria">Scheduling criteria</a></li>
+<li><a href="theory.html#measures">Reading a time-scale diagram: turnaround and waiting time</a></li>
+<li><a href="theory.html#selection">Selection function and decision mode</a></li>
+<li><a href="theory.html#fcfs">First come, first served (FCFS)</a></li>
+<li><a href="theory.html#rr">Round robin (RR)</a></li>
+<li><a href="theory.html#spn">Shortest process next (SPN)</a></li>
+<li><a href="theory.html#srt">Shortest remaining time (SRT)</a></li>
+<li><a href="theory.html#hrrn">Highest response ratio next (HRRN)</a></li>
+<li><a href="theory.html#feedback">Feedback (multilevel feedback queues)</a></li>
+<li><a href="theory.html#priority">Priority scheduling</a></li>
+<li><a href="theory.html#quantum">The effect of the time quantum</a></li>
+<li><a href="theory.html#compare">Comparing the policies</a></li>
+<li><a href="theory.html#extras">Other textbook topics (short)</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="examples.html">Examples</a></summary><ul>
+<li><a href="examples.html#examples-workload">The workload for every example</a></li>
+<li><a href="examples.html#ex-fcfs-h">Example 1: First come, first served</a></li>
+<li><a href="examples.html#ex-rr-h">Example 2: Round robin with q = 2</a></li>
+<li><a href="examples.html#ex-spn-h">Example 3: Shortest process next</a></li>
+<li><a href="examples.html#ex-srt-h">Example 4: Shortest remaining time</a></li>
+<li><a href="examples.html#ex-hrrn-h">Example 5: Highest response ratio next</a></li>
+<li><a href="examples.html#ex-fb1-h">Example 6: Feedback with q = 1</a></li>
+<li><a href="examples.html#ex-fb2i-h">Example 7: Feedback with q = 2i</a></li>
+<li><a href="examples.html#ex-prio-h">Example 8: Non-preemptive priority</a></li>
+<li><a href="examples.html#ex-pprio-h">Example 9: Preemptive priority</a></li>
+<li><a href="examples.html#ex-compare-h">Example 10: Comparing the nine schedules</a></li>
+<li><a href="examples.html#ex-naming-h">Example 11: Naming the policy from a schedule</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="practice.html">Practice</a></summary><ul>
+<li><a href="practice.html#practice-tasks">Practice tasks</a></li>
+<li><a href="practice.html#pr-fcfs-h">Task 1: FCFS and the three measures</a></li>
+<li><a href="practice.html#pr-rr-h">Task 2: Round robin with q = 3</a></li>
+<li><a href="practice.html#pr-spn-h">Task 3: Shortest process next</a></li>
+<li><a href="practice.html#pr-srt-h">Task 4: Shortest remaining time with measures</a></li>
+<li><a href="practice.html#pr-hrrn-ratio-h">Task 5: HRRN: ratios at a decision time</a></li>
+<li><a href="practice.html#pr-hrrn-ms-h">Task 6: HRRN in milliseconds</a></li>
+<li><a href="practice.html#pr-fb1-h">Task 7: Feedback with q = 1</a></li>
+<li><a href="practice.html#pr-fb2i-h">Task 8: Feedback with q = 2i</a></li>
+<li><a href="practice.html#pr-fb3-h">Task 9: Feedback with three queues: two rules for the lowest queue</a></li>
+<li><a href="practice.html#pr-prio-h">Task 10: Priority: non-preemptive and preemptive</a></li>
+<li><a href="practice.html#pr-name-h">Task 11: Name the policy</a></li>
+<li><a href="practice.html#pr-quantum-h">Task 12: The effect of the quantum</a></li>
+<li><a href="practice.html#pr-types-h">Task 13: Four types of scheduling</a></li>
+<li><a href="practice.html#pr-selection-h">Task 14: Selection function, decision mode and starvation</a></li>
+<li><a href="practice.html#pr-criteria-h">Task 15: Criteria, triggers and the long-term decisions</a></li>
+<li><a href="practice.html#pr-fbq-h">Task 16: Feedback q = 1 compared with q = 2i</a></li>
+<li><a href="practice.html#past-papers-h">Past exam questions</a></li>
+<li><a href="practice.html#tut-lec-h">Tutorial and lecture problems</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="quiz.html">Quiz</a></summary><ul>
+<li><a href="quiz.html#quiz-types-h">Kinds of scheduling and criteria</a></li>
+<li><a href="quiz.html#quiz-policies-h">Selection functions and decision modes</a></li>
+<li><a href="quiz.html#quiz-numbers-h">Schedules and measures</a></li>
+<li><a href="quiz.html#quiz-hrrn-fb-h">HRRN and Feedback</a></li>
+<li><a href="quiz.html#quiz-quantum-h">Quantum and naming the policy</a></li>
+</ul></details>
+<a class="section-nav__mock" href="index.html#mock-test">Mock test</a>
+</div></details></aside>
+  <main class="chapter-page">
+<section id="home-start"><h2 id="home-topic">Uniprocessor Scheduling</h2><p><strong>Chapter 9 of COS 122 Operating Systems.</strong></p><p>How an operating system decides which process runs on a single processor: the four kinds of scheduling, the criteria a policy is judged by, and the short-term policies FCFS, round robin, SPN, SRT, HRRN, Feedback and Priority. The exam questions draw time-scale diagrams, compute turnaround and waiting times, name a policy from a schedule and work out HRRN ratios.</p><figure class="teaching-figure svg-figure" id="home-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 479 188" width="479" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="RR q=1 time-scale diagram">
+<text x="23" y="18" fill="#1f2933" font-weight="bold">RR q = 1</text>
+<text x="15" y="45.0" text-anchor="end" fill="#1f2933">A</text>
+<rect x="23" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="45" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="67" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="89" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="111" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="133" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="155" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="177" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="199" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="221" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="243" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="265" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="287" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="309" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="331" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="353" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="375" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="397" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="419" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="441" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="15" y="71.0" text-anchor="end" fill="#1f2933">B</text>
+<rect x="23" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="45" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="67" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="89" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="111" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="133" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="155" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="177" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="199" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="221" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="243" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="265" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="287" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="309" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="331" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="353" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="375" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="397" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="419" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="441" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="15" y="97.0" text-anchor="end" fill="#1f2933">C</text>
+<rect x="23" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="45" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="67" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="89" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="111" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="133" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="155" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="177" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="199" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="221" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="243" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="265" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="287" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="309" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="331" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="353" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="375" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="397" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="419" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="441" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="15" y="123.0" text-anchor="end" fill="#1f2933">D</text>
+<rect x="23" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="45" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="67" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="89" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="111" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="133" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="155" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="177" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="199" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="221" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="243" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="265" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="287" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="309" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="331" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="353" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="375" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="397" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="419" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="441" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="15" y="149.0" text-anchor="end" fill="#1f2933">E</text>
+<rect x="23" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="45" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="67" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="89" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="111" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="133" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="155" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="177" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="199" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="221" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="243" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="265" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="287" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="309" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="331" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="353" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="375" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="397" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="419" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="441" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="23" y1="162" x2="463" y2="162" stroke="#1f2933"/>
+<line x1="23" y1="162" x2="23" y2="168" stroke="#1f2933"/>
+<text x="23" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="45" y1="162" x2="45" y2="168" stroke="#1f2933"/>
+<text x="45" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="67" y1="162" x2="67" y2="168" stroke="#1f2933"/>
+<text x="67" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="89" y1="162" x2="89" y2="168" stroke="#1f2933"/>
+<text x="89" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="111" y1="162" x2="111" y2="168" stroke="#1f2933"/>
+<text x="111" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="133" y1="162" x2="133" y2="168" stroke="#1f2933"/>
+<text x="133" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="155" y1="162" x2="155" y2="168" stroke="#1f2933"/>
+<text x="155" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="177" y1="162" x2="177" y2="168" stroke="#1f2933"/>
+<text x="177" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="199" y1="162" x2="199" y2="168" stroke="#1f2933"/>
+<text x="199" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="221" y1="162" x2="221" y2="168" stroke="#1f2933"/>
+<text x="221" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="243" y1="162" x2="243" y2="168" stroke="#1f2933"/>
+<text x="243" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="265" y1="162" x2="265" y2="168" stroke="#1f2933"/>
+<text x="265" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="287" y1="162" x2="287" y2="168" stroke="#1f2933"/>
+<text x="287" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="309" y1="162" x2="309" y2="168" stroke="#1f2933"/>
+<text x="309" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="331" y1="162" x2="331" y2="168" stroke="#1f2933"/>
+<text x="331" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="353" y1="162" x2="353" y2="168" stroke="#1f2933"/>
+<text x="353" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="375" y1="162" x2="375" y2="168" stroke="#1f2933"/>
+<text x="375" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="397" y1="162" x2="397" y2="168" stroke="#1f2933"/>
+<text x="397" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="419" y1="162" x2="419" y2="168" stroke="#1f2933"/>
+<text x="419" y="180" text-anchor="middle" fill="#1f2933">18</text>
+<line x1="441" y1="162" x2="441" y2="168" stroke="#1f2933"/>
+<text x="441" y="180" text-anchor="middle" fill="#1f2933">19</text>
+<line x1="463" y1="162" x2="463" y2="168" stroke="#1f2933"/>
+<text x="463" y="180" text-anchor="middle" fill="#1f2933">20</text>
+</svg></div><figcaption>A time-scale diagram: round robin with quantum 1 on the textbook workload.</figcaption></figure></section><section id="home-route"><h2 id="home-order">Suggested order</h2><ol><li><strong>Theory.</strong></li><li><strong>Examples.</strong></li><li><strong>Practice</strong>, then the past exam questions on that page.</li><li><strong>Tutorial and lecture problems</strong>, at the end of the Practice page.</li><li><strong>Quiz.</strong></li><li><strong>Mock test</strong> (see below).</li></ol><p>Examples and practice tasks carry a level label: <em>Warm-up (level 1 of 3)</em> uses one idea at a time; <em>Exam-typical (level 2 of 3)</em> is the size and style of an exam question; <em>Longer (level 3 of 3)</em> combines several steps.</p></section><section id="mock-test"><h2 id="mock-test-h">Mock test</h2><p>A 30-mark paper on uniprocessor scheduling in the style of past exam papers, with empty time-scale grids to fill in. Write it in one sitting before you open the solutions.</p><ul><li><a href="COS122_Ch9_Scheduling_Mock_Test.pdf" download="COS122_Ch9_Scheduling_Mock_Test.pdf">Mock test (PDF)</a></li><li><a href="COS122_Ch9_Scheduling_Mock_Test_Solutions.pdf" download="COS122_Ch9_Scheduling_Mock_Test_Solutions.pdf">Mock test solutions (PDF)</a></li></ul></section><section id="rules"><h2 id="rules-h">Rules used in every answer</h2><ul><li>A process that arrives at time t is ready for the decision made at time t.</li><li>Round robin: when a quantum ends at the same time as a new process arrives, the new process joins the queue first.</li><li>SRT: a newcomer preempts only if it needs strictly less time than the running process has left.</li><li>Priority: a lower number means a higher priority.</li><li>Feedback: preemption only when a quantum ends; a process alone keeps its queue; the lowest-queue rule is stated in each question.</li><li>Waiting time = turnaround &minus; service time.</li></ul><section class="block block--caution"><p class="block__label">Assumed</p><p>When SPN, SRT, HRRN or Priority must choose between two processes with equal values, the earlier arrival goes first. No question in the course material depends on this, and the questions on these pages avoid such ties except where this is said.</p></section></section>
+  </main>
+  <footer class="site-footer"><div class="site-footer__inner">Swift Tuition | COS 122 Operating Systems</div></footer>
+  <script>
+(function () {
+  'use strict';
+
+  var CPP98_SAMPLE = '#include <iostream>\n\nint main() {\n    int number = 4;\n    number = number + 1;\n    std::cout << number << "\\n";\n    return 0;\n}\n';
+  function query(host, selector) { return host.querySelector(selector); }
+  function setText(element, value) { if (element) { element.textContent = value; } }
+  function announce(element, message, busy) {
+    if (!element) { return; }
+    element.textContent = message;
+    element.setAttribute('aria-live', 'polite');
+    element.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+  function normalise(value) { return String(value || '').replace(/\s+/g, '').toLowerCase(); }
+  function control(host, name, alternatives) {
+    return query(host, '[data-' + name + ']') || query(host, alternatives || '');
+  }
+
+  function initHighlighting() {
+    var grammar = window.COS110Cpp98Grammar;
+    document.querySelectorAll('[data-component="cpp-highlight"]').forEach(function (host) {
+      var code = host.matches('code, pre') ? host : query(host, 'code');
+      if (!code || !grammar) { return; }
+      var rawCode = code.textContent;
+      code.dataset.cppSource = rawCode;
+      code.innerHTML = grammar.highlight(rawCode);
+      code.classList.add('cpp98-code');
+    });
+  }
+
+  function initMemorySteppers() {
+    document.querySelectorAll('[data-component="memory-stepper"]').forEach(function (host) {
+      var steps = Array.prototype.slice.call(host.querySelectorAll('[data-memory-step], .memory-step'));
+      if (!steps.length) { return; }
+      var previous = control(host, 'memory-prev', '[data-step-prev]');
+      var next = control(host, 'memory-next', '[data-step-next]');
+      var status = control(host, 'memory-status', '[data-step-status]');
+      var activeIndex = 0;
+      host.setAttribute('role', 'group');
+      host.setAttribute('aria-roledescription', 'memory sequence');
+      function render(index, focusStep) {
+        activeIndex = Math.max(0, Math.min(index, steps.length - 1));
+        steps.forEach(function (step, stepIndex) {
+          var active = stepIndex === activeIndex;
+          step.hidden = !active;
+          step.tabIndex = active ? 0 : -1;
+          step.setAttribute('aria-current', active ? 'step' : 'false');
+        });
+        if (previous) { previous.disabled = activeIndex === 0; }
+        if (next) { next.disabled = activeIndex === steps.length - 1; }
+        announce(status, 'Step ' + (activeIndex + 1) + ' of ' + steps.length + '.', false);
+        if (focusStep) { steps[activeIndex].focus(); }
+      }
+      if (previous) { previous.addEventListener('click', function () { render(activeIndex - 1, true); }); }
+      if (next) { next.addEventListener('click', function () { render(activeIndex + 1, true); }); }
+      host.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowLeft') { event.preventDefault(); render(activeIndex - 1, true); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); render(activeIndex + 1, true); }
+        if (event.key === 'Home') { event.preventDefault(); render(0, true); }
+        if (event.key === 'End') { event.preventDefault(); render(steps.length - 1, true); }
+      });
+      render(0, false);
+    });
+  }
+
+  function initRunners() {
+    document.querySelectorAll('[data-component="cpp-runner"]').forEach(function (host) {
+      var code = control(host, 'runner-code', 'textarea, [contenteditable="true"]');
+      var run = control(host, 'runner-run', 'button[type="submit"]');
+      var reset = control(host, 'runner-reset');
+      var copy = control(host, 'runner-copy');
+      var output = control(host, 'runner-output', 'output, pre');
+      var prediction = control(host, 'runner-prediction');
+      var fallback = control(host, 'runner-fallback');
+      var highlightedCode = query(host, '[data-runner-highlight] code');
+      var grammar = window.COS110Cpp98Grammar;
+      if (!code) { return; }
+      var originalCode = code.value !== undefined ? code.value : code.textContent;
+      originalCode = originalCode.trim() || CPP98_SAMPLE;
+      function readCode() { return code.value !== undefined ? code.value : code.textContent; }
+      function updateHighlight(value) {
+        if (!highlightedCode) { return; }
+        highlightedCode.innerHTML = grammar ? grammar.highlight(value) : value.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      }
+      function writeCode(value) { if (code.value !== undefined) { code.value = value; } else { code.textContent = value; } updateHighlight(value); }
+      function fallbackMessage() {
+        return 'If no result appears, keep changing the numbers and trace the statements one at a time.';
+      }
+      function reportFallback(message) { announce(fallback, message || fallbackMessage(), false); }
+      writeCode(originalCode);
+      reportFallback();
+      code.addEventListener('input', function () { updateHighlight(readCode()); });
+      code.addEventListener('scroll', function () {
+        var highlightedLayer = query(host, '[data-runner-highlight]');
+        if (highlightedLayer) { highlightedLayer.scrollTop = code.scrollTop; highlightedLayer.scrollLeft = code.scrollLeft; }
+      });
+      if (run) {
+        run.addEventListener('click', function (event) {
+          event.preventDefault();
+          var source = readCode();
+          if (!source.trim()) { announce(output, 'Add code before running it.', false); reportFallback(); return; }
+          run.disabled = true;
+          announce(output, 'Getting a result…', true);
+          reportFallback('Running your changed code…');
+          fetch('https://wandbox.org/api/compile.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              compiler: 'gcc-12.3.0',
+              code: source,
+              'compiler-option-raw': '-std=c++98\n-Wall\n-Wextra\n-pedantic'
+            })
+          }).then(function (response) {
+            if (!response.ok) { throw new Error('No result was received.'); }
+            return response.json();
+          }).then(function (result) {
+            var compilerText = (result.compiler_error || result.compiler_output || '').trim();
+            var programText = (result.program_output || result.program_error || result.status || '').trim();
+            if (result.status === '0' || result.status === 0) {
+              announce(output, programText || '(The program produced no output.)', false);
+              reportFallback('Result received. Change one number and run it again.');
+            } else {
+              announce(output, compilerText || programText || 'The code needs a fix before it can run.', false);
+              reportFallback('Check one change at a time. ' + fallbackMessage());
+            }
+          }).catch(function () {
+            announce(output, 'No result was received right now.', false);
+            reportFallback();
+          }).finally(function () { run.disabled = false; });
+        });
+      }
+      if (reset) {
+        reset.addEventListener('click', function (event) {
+          event.preventDefault(); writeCode(originalCode);
+          if (prediction) { prediction.value = ''; }
+          announce(output, 'Ready. Change a number, then run the code.', false); reportFallback();
+        });
+      }
+      if (copy) {
+        copy.addEventListener('click', function (event) {
+          event.preventDefault();
+          var source = readCode();
+          var copied = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(source) : Promise.reject();
+          copied.then(function () { announce(output, 'Code copied.', false); }).catch(function () {
+            if (code.select) { code.select(); document.execCommand('copy'); announce(output, 'Code copied.', false); }
+            else { announce(output, 'Copy is unavailable. Select the code and copy it manually.', false); }
+          });
+        });
+      }
+    });
+  }
+
+  function initPracticeReveals() {
+    document.querySelectorAll('[data-component="practice-reveal"]').forEach(function (host) {
+      var toggle = control(host, 'practice-toggle', 'button');
+      var solution = control(host, 'practice-solution', '.practice-solution');
+      if (!toggle || !solution) { return; }
+      var solutionId = solution.id || 'practice-solution-' + Math.random().toString(36).slice(2);
+      solution.id = solutionId;
+      toggle.setAttribute('aria-controls', solutionId);
+      function render(revealed) { solution.hidden = !revealed; toggle.setAttribute('aria-expanded', String(revealed)); }
+      toggle.addEventListener('click', function () { render(solution.hidden); });
+      render(false);
+    });
+  }
+
+  function initQuizzes() {
+    document.querySelectorAll('[data-component="quiz-check"]').forEach(function (card) {
+      var answer = control(card, 'quiz-answer', 'input, textarea, select');
+      var submit = control(card, 'quiz-submit', 'button[type="submit"]');
+      var feedback = control(card, 'quiz-feedback', '[role="status"], .quiz-feedback');
+      var key = card.dataset.answer || card.dataset.correctAnswer || '';
+      if (!answer || !feedback || !key) { return; }
+      function show(state) {
+        var message = card.dataset['feedback' + state] || '';
+        feedback.dataset.state = state.toLowerCase();
+        announce(feedback, message, false);
+        answer.setAttribute('aria-invalid', state === 'Incorrect' ? 'true' : 'false');
+      }
+      function check(event) {
+        if (event) { event.preventDefault(); }
+        var given = normalise(answer.value);
+        if (!given) { show('Blank'); return; }
+        var acceptable = key.split('|').map(normalise);
+        show(acceptable.indexOf(given) !== -1 ? 'Correct' : 'Incorrect');
+      }
+      if (submit) { submit.addEventListener('click', check); }
+      var form = card.closest('form');
+      if (form) { form.addEventListener('submit', check); }
+    });
+  }
+
+  function init() { initHighlighting(); initMemorySteppers(); initRunners(); initPracticeReveals(); initQuizzes(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+}());
+
+/* Contents sidebar: open on wide screens, close after a jump on small ones, mark the section in view. */
+(function () {
+  var nav = document.querySelector('.section-nav'); if (!nav) return;
+  var box = nav.querySelector('.section-nav__box');
+  var wide = window.matchMedia('(min-width: 1340px)');
+  function fit() { box.open = wide.matches; }
+  fit(); if (wide.addEventListener) wide.addEventListener('change', fit);
+  nav.addEventListener('click', function (e) {
+    var a = e.target.closest('a'); if (a && !wide.matches && a.getAttribute('href').charAt(0) === '#') box.open = false;
+  });
+  var links = nav.querySelectorAll('.is-current ul a'); if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {}; links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var seen = new Set();
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) seen.add(en.target.id); else seen.delete(en.target.id); });
+    var first = null; links.forEach(function (a) { var id = a.getAttribute('href').slice(1); if (!first && seen.has(id)) first = a; });
+    if (first) { links.forEach(function (a) { a.classList.toggle('is-active', a === first); }); }
+  }, { rootMargin: '-100px 0px -55% 0px' });
+  Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+
+  </script>
+</body>
+</html>

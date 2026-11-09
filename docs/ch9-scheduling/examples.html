@@ -1,0 +1,1818 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Examples | Uniprocessor Scheduling | COS 122</title>
+  <style>
+:root {
+  --page: #f8f5ef;
+  --paper: #fffdfa;
+  --ink: #2f2925;
+  --muted: #6e6258;
+  --rule: #d9cfc2;
+  --wine: #8b2252;
+  --green: #276248;
+  --blue: #24527a;
+  --orange: #a94e24;
+  --teal: #086d72;
+  --heading: Georgia, serif;
+  --body: Georgia, serif;
+  --label: Arial, sans-serif;
+  --mono: Consolas, "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--page); }
+body { margin: 0; color: var(--ink); font: 18px/1.65 var(--body); }
+a { color: var(--wine); text-underline-offset: 2px; }
+button, input, textarea { font: inherit; }
+
+.site-header { position: sticky; top: 0; z-index: 10; background: rgba(248, 245, 239, .98); border-bottom: 3px solid var(--wine); }
+.site-header__inner, .page-head, .page-tabs__inner, .chapter-page, .site-footer__inner { max-width: 980px; margin: 0 auto; padding-right: 1.25rem; padding-left: 1.25rem; }
+.site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: .7rem; padding-bottom: .7rem; }
+.brand { display: grid; gap: .05rem; }
+.brand__name, .eyebrow, .block__label, .difficulty, .question-label { font: 700 .7rem/1.3 var(--label); letter-spacing: .1em; text-transform: uppercase; }
+.brand__name, .eyebrow { color: var(--wine); }
+.brand__chapter { font: 700 1.08rem/1.15 var(--heading); }
+.site-header__tag { color: var(--muted); font: .78rem/1.3 var(--label); text-align: right; }
+
+.page-head { padding-top: 1rem; padding-bottom: .45rem; }
+.page-title { margin: .3rem 0; font: 700 1.95rem/1.15 var(--heading); }
+.page-subtitle { max-width: 48rem; margin: 0; color: var(--muted); }
+.page-tabs { position: sticky; top: 59px; z-index: 9; background: rgba(248, 245, 239, .98); border-bottom: 1px solid var(--rule); }
+.page-tabs__inner { display: flex; overflow-x: auto; padding-top: 0; padding-bottom: 0; scrollbar-width: none; }
+.page-tabs__inner::-webkit-scrollbar { display: none; }
+.page-tabs a { padding: .7rem 1rem; color: var(--muted); border-bottom: 2px solid transparent; font: 700 .76rem/1 var(--label); letter-spacing: .07em; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+.page-tabs a:hover, .page-tabs a[aria-current="page"] { color: var(--wine); border-bottom-color: var(--wine); }
+
+.chapter-page { padding-top: 1.5rem; padding-bottom: 4rem; }
+h2, h3 { font-family: var(--heading); line-height: 1.25; }
+h2 { margin: 1.8rem 0 .7rem; font-size: 1.35rem; }
+h3 { margin: 1.15rem 0 .5rem; font-size: 1.08rem; }
+p { margin: 0 0 1rem; }
+ul, ol { padding-left: 1.4rem; }
+li + li { margin-top: .4rem; }
+code, pre, textarea { font-family: var(--mono); }
+code { padding: .08rem .28rem; color: var(--teal); background: #e8f3f3; border-radius: 3px; }
+pre { overflow-x: auto; margin: 0; padding: 1rem; color: #f7f6f1; background: #1f2528; border-radius: 6px; }
+
+.block { margin: 1.15rem 0; padding: .9rem 1rem; border-left: 4px solid var(--rule); border-radius: 0 6px 6px 0; background: #f4eee6; }
+.block__label { margin: 0 0 .25rem; }
+.block--definition { border-color: var(--wine); }
+.block--method { border-color: var(--blue); }
+.block--caution { border-color: var(--orange); }
+.block--check { border-color: var(--green); }
+.two-col, .reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.comparison, .example, .practice-set, .quiz-card, .reference-card, .runner-card { padding: 1rem 1.1rem; border: 1px solid var(--rule); border-radius: 7px; background: var(--paper); }
+.comparison h3, .example h2, .practice-set h2, .quiz-card h2, .reference-card h3, .runner-card h2 { margin-top: 0; }
+.example, .quiz-card, .runner-card { margin: 1.35rem 0; }
+.difficulty { display: inline-block; padding: .22rem .45rem; border-radius: 3px; }
+.difficulty--easy { color: var(--green); background: #e2f0e8; }
+.difficulty--medium { color: var(--blue); background: #e4eef7; }
+.difficulty--hard { color: var(--orange); background: #f7e9df; }
+.question { padding: 1rem 0; border-top: 1px solid var(--rule); }
+.question:first-of-type { border-top: 0; }
+.question-label { margin: 0 0 .35rem; color: var(--muted); }
+.hint { color: var(--muted); font-size: .94rem; }
+.reveal { margin-top: .85rem; overflow: hidden; border: 1px solid var(--rule); border-radius: 6px; }
+.reveal__toggle { display: flex; width: 100%; justify-content: space-between; padding: .68rem .85rem; color: var(--wine); background: #f3ece4; border: 0; cursor: pointer; font: 700 .78rem/1.2 var(--label); letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+.reveal__body { padding: .9rem 1rem; border-top: 1px solid var(--rule); }
+.answer-row, .runner-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .75rem; }
+input[type="text"], input[type="number"], textarea { width: min(30rem, 100%); padding: .55rem .65rem; border: 1px solid #a99a8b; border-radius: 4px; background: #fff; }
+textarea { min-height: 7.5rem; resize: vertical; }
+button { padding: .55rem .75rem; color: #fff; border: 1px solid var(--wine); border-radius: 4px; background: var(--wine); cursor: pointer; font: 700 .78rem/1.2 var(--label); letter-spacing: .04em; text-transform: uppercase; }
+button[data-runner-reset], button[data-memory-prev], button[data-memory-next] { color: var(--blue); border-color: #93adbf; background: #eef5f9; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.feedback, .runner-output, .runner-fallback, .memory-status { min-height: 1.55rem; margin: .6rem 0 0; color: var(--muted); font: .9rem/1.4 var(--label); }
+.mcq { display: grid; gap: .55rem; }
+.mcq label { display: flex; align-items: flex-start; gap: .55rem; }
+.teaching-figure { max-width: 850px; margin: 1.3rem auto; padding: .8rem; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+.teaching-figure img { display: block; width: 100%; height: auto; }
+.teaching-figure figcaption { margin-top: .65rem; color: var(--muted); font: .92rem/1.45 var(--label); }
+.code-caption { margin-top: .65rem; color: var(--muted); font: .92rem/1.45 var(--label); }
+.site-footer { border-top: 1px solid var(--rule); color: var(--muted); font: .8rem/1.4 var(--label); }
+.site-footer__inner { padding-top: 1rem; padding-bottom: 1.2rem; }
+
+@media (max-width: 650px) {
+  body { font-size: 17px; }
+  .site-header__tag { display: none; }
+  .page-title { font-size: 1.55rem; }
+  h2 { font-size: 1.24rem; }
+  .page-tabs { top: 52px; }
+  .two-col, .reference-grid { grid-template-columns: 1fr; }
+}
+
+/* Shared, accessible computing components for the content-light prototype. */
+.cpp98-code { display: block; overflow-x: auto; padding: 1rem; border-radius: .75rem; background: #14212f; color: #eef5f8; font: .9rem/1.58 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; tab-size: 4; }
+.tok-preprocessor { color: #8ad7ff; }.tok-keyword { color: #ff9f80; }.tok-type { color: #8ee0ae; }.tok-function { color: #ffd37a; }.tok-string, .tok-character { color: #c8df85; }.tok-number { color: #dca9ff; }.tok-comment { color: #aeb8c0; font-style: italic; }.tok-operator { color: #f0eff1; }
+[data-component="memory-stepper"] { border: 1px solid #b9c9d4; border-radius: 1rem; background: #f7fbfd; padding: 1rem; }
+[data-memory-step], .memory-step { outline: none; min-height: 8rem; padding: .9rem; border-radius: .6rem; background: #fff; border: 1px solid #d8e4eb; }
+[data-memory-status], [data-step-status] { display: block; margin: .7rem 0; color: #365166; font-weight: 650; }
+[data-component="cpp-runner"] { border: 1px solid #b9c9d4; border-radius: 1rem; background: #f7fbfd; padding: 1rem; }
+.code-editor { position: relative; min-height: 12rem; overflow: hidden; border: 1px solid #7891a3; border-radius: .55rem; background: #14212f; }
+.code-editor:focus-within { outline: 3px solid #e49c19; outline-offset: 3px; }
+[data-runner-highlight] { display: block; min-height: 12rem; max-height: 24rem; margin: 0; padding: 0; overflow: auto; border-radius: 0; background: transparent; }
+[data-runner-highlight] code { display: block; min-width: max-content; min-height: 12rem; padding: .9rem; white-space: pre; font: .9rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; }
+[data-runner-code] { position: absolute; inset: 0; width: 100%; min-height: 12rem; margin: 0; padding: .9rem; border: 0; border-radius: 0; resize: none; overflow: auto; background: transparent; color: transparent; caret-color: #eef5f8; font: .9rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; }
+[data-runner-code]::selection { background: rgba(228, 156, 25, .38); color: transparent; }
+[data-runner-output] { display: block; min-height: 3.25rem; margin-top: .7rem; padding: .8rem; white-space: pre-wrap; border-left: .25rem solid #216b84; background: #fff; color: #172b3a; }
+[data-runner-fallback] { margin-top: .7rem; color: #365166; font-size: .92rem; }
+[data-component="cpp-runner"] button, [data-component="memory-stepper"] button, [data-component="practice-reveal"] button, [data-component="quiz-check"] button { min-height: 2.65rem; margin: .65rem .4rem 0 0; padding: .55rem .9rem; border: 1px solid #165d78; border-radius: .45rem; background: #165d78; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+[data-component] button:hover:not(:disabled) { background: #0f4a62; } [data-component] button:disabled { opacity: .55; cursor: not-allowed; } [data-component] button:focus-visible, [data-component] input:focus-visible, [data-memory-step]:focus-visible { outline: 3px solid #e49c19; outline-offset: 3px; }
+[data-practice-solution], .practice-solution { margin-top: .8rem; padding: 1rem; border-left: .3rem solid #1d7962; background: #edf8f4; }
+[data-quiz-feedback][data-state="correct"] { color: #0b6047; font-weight: 700; } [data-quiz-feedback][data-state="incorrect"], .quiz-feedback[data-state="incorrect"] { color: #9b2d20; font-weight: 700; } [data-quiz-feedback][data-state="blank"], .quiz-feedback[data-state="blank"] { color: #6a4a00; font-weight: 700; }
+@media (max-width: 42rem) { .code-editor, [data-runner-highlight], [data-runner-highlight] code, [data-runner-code] { min-height: 15rem; } [data-runner-highlight] code, [data-runner-code] { font-size: .82rem; } }
+
+.route { margin: 0 0 2.25rem; }
+.route > h2 { margin-bottom: .45rem; }
+.route-stage { margin: 1rem 0; }
+.route-stage > :first-child { margin-top: 0; }
+.route-stage > :last-child { margin-bottom: 0; }
+
+.code-visual-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, .8fr);
+  gap: 1rem;
+  align-items: start;
+  margin: 1.25rem 0;
+}
+.code-visual-pair > [data-pair] { min-width: 0; }
+.code-visual-pair > [data-pair="interpretation"] { grid-column: 1 / -1; }
+.code-visual-pair figure { margin: 0; overflow: visible; }
+.code-visual-pair img,
+.drawing-model img,
+.checked-visual img { display: block; width: 100%; height: auto; }
+
+.construction-steps { padding-left: 1.4rem; }
+.construction-steps li + li { margin-top: .45rem; }
+.attempt-surface {
+  min-height: 7rem;
+  padding: 1rem;
+  border: 2px dashed var(--rule);
+  border-radius: 7px;
+  background: #fff;
+}
+.partial-model { color: var(--muted); }
+.checked-visual { margin: 1rem 0 0; }
+
+.code-visual-pair img { max-width: 21rem; margin-inline: auto; }
+.drawing-model img,
+.checked-visual img { max-width: 24rem; margin-inline: auto; }
+
+@media (max-width: 650px) {
+  .page-tabs__inner {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding-inline: .5rem;
+    overflow: visible;
+  }
+  .page-tabs a {
+    padding: 1rem .2rem;
+    text-align: center;
+    font-size: .75rem;
+    letter-spacing: .02em;
+  }
+  .code-visual-pair { grid-template-columns: 1fr; }
+  .code-visual-pair > [data-pair="interpretation"] { grid-column: auto; }
+}
+/* Practical 3: bordered attribute and output-reasoning tables. */
+.attribute-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 1rem 0; border: 2px solid #9b8777; background: var(--paper); }
+.attribute-table th, .attribute-table td { border: 1px solid #b9a898; padding: .7rem .8rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.attribute-table th { background: #eee5d9; font-weight: 700; }
+.attribute-table tbody tr:nth-child(even) { background: #f7f1e8; }
+.attribute-table caption { text-align: left; font-weight: 700; padding: .4rem 0; }
+@media (max-width: 650px) { .attribute-table th, .attribute-table td { padding: .45rem .35rem; font-size: .88rem; } }
+
+
+/* Contents sidebar (section-nav add-on). */
+.section-nav { font: .86rem/1.35 var(--label); }
+.section-nav__box { border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); }
+.section-nav__box > summary { cursor: pointer; padding: .6rem .8rem; color: var(--wine); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; font-size: .74rem; list-style: none; }
+.section-nav__box > summary::-webkit-details-marker, .section-nav__page > summary::-webkit-details-marker { display: none; }
+.section-nav__box > summary::before { content: "\25B8"; display: inline-block; width: 1.1em; transition: transform .15s; }
+.section-nav__box[open] > summary::before { transform: rotate(90deg); }
+.section-nav__body { padding: 0 .5rem .6rem; }
+.section-nav__page { margin: .1rem 0; }
+.section-nav__page > summary { cursor: pointer; padding: .3rem .4rem; border-radius: 5px; color: var(--ink); font-weight: 700; list-style: none; }
+.section-nav__page > summary::before { content: "\25B8"; display: inline-block; width: 1em; color: var(--muted); transition: transform .15s; }
+.section-nav__page[open] > summary::before { transform: rotate(90deg); }
+.section-nav__page > summary a { color: inherit; text-decoration: none; }
+.section-nav__page.is-current > summary { background: rgba(139, 34, 82, .08); color: var(--wine); }
+.section-nav ul { list-style: none; margin: .1rem 0 .3rem; padding: 0 0 0 1.35rem; }
+.section-nav li + li { margin-top: 0; }
+.section-nav ul a { display: block; padding: .22rem .4rem; border-left: 2px solid var(--rule); color: var(--muted); text-decoration: none; }
+.section-nav ul a:hover { color: var(--wine); border-left-color: var(--wine); }
+.section-nav ul a.is-active { color: var(--wine); border-left-color: var(--wine); font-weight: 700; }
+.section-nav__mock { display: block; margin: .4rem .4rem 0; padding: .35rem .4rem; border-top: 1px solid var(--rule); color: var(--wine); font-weight: 700; text-decoration: none; }
+h2[id], section[id] { scroll-margin-top: 110px; }
+
+/* Wide screens: fixed column to the left of the 980px page. */
+@media (min-width: 1340px) {
+  .section-nav { position: fixed; top: 112px; left: max(.75rem, calc(50vw - 490px - 250px)); width: min(230px, calc(50vw - 490px - 1.5rem)); max-height: calc(100vh - 128px); overflow-y: auto; z-index: 8; }
+}
+/* Narrower screens: a button bottom-left that opens the same list as a panel. */
+@media (max-width: 1339px) {
+  .section-nav { position: fixed; left: .75rem; bottom: .75rem; z-index: 20; max-width: min(320px, calc(100vw - 1.5rem)); }
+  .section-nav__box { box-shadow: 0 2px 10px rgba(47, 41, 37, .18); }
+  .section-nav__box[open] .section-nav__body { max-height: 65vh; overflow-y: auto; }
+}
+@media print { .section-nav { display: none; } }
+
+.svg-scroll { overflow-x: auto; }
+.svg-figure svg { display: block; max-width: none; margin: 0 auto; height: auto; }
+.table-wrap { overflow-x: auto; }
+.decision-table { table-layout: auto; }
+.decision-table td:first-child { white-space: nowrap; font-weight: 700; }
+.attribute-table td sub, .attribute-table th sub { font-size: .7em; }
+.cells { font-family: var(--mono); background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: .6rem .8rem; overflow-x: auto; white-space: nowrap; }
+.answer-key { color: var(--green); font-weight: 700; }
+.mock-jump { margin: 0 0 1rem; }
+
+  </style>
+</head>
+<body data-current-page="examples">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand"><span class="brand__name">Swift Tuition</span><span class="brand__chapter">COS 122</span></div>
+      <span class="site-header__tag">Operating Systems</span>
+    </div>
+  </header>
+  <header class="page-head">
+    <p class="eyebrow">Worked examples · Chapter 9</p>
+    <h1 class="page-title">Worked examples</h1>
+    <p class="page-subtitle">Schedules, decision tables and measures</p>
+  </header>
+  <nav class="page-tabs" aria-label="Page navigation"><div class="page-tabs__inner"><a href="index.html">Home</a><a href="theory.html">Theory</a><a href="examples.html" aria-current="page">Examples</a><a href="practice.html">Practice</a><a href="quiz.html">Quiz</a></div></nav>
+<aside class="section-nav" aria-label="Contents">
+<details class="section-nav__box"><summary>Contents</summary><div class="section-nav__body">
+<details class="section-nav__page"><summary><a href="index.html">Home</a></summary><ul>
+<li><a href="index.html#home-topic">Uniprocessor Scheduling</a></li>
+<li><a href="index.html#home-order">Suggested order</a></li>
+<li><a href="index.html#mock-test-h">Mock test</a></li>
+<li><a href="index.html#rules-h">Rules used in every answer</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="theory.html">Theory</a></summary><ul>
+<li><a href="theory.html#types">Four kinds of scheduling</a></li>
+<li><a href="theory.html#criteria">Scheduling criteria</a></li>
+<li><a href="theory.html#measures">Reading a time-scale diagram: turnaround and waiting time</a></li>
+<li><a href="theory.html#selection">Selection function and decision mode</a></li>
+<li><a href="theory.html#fcfs">First come, first served (FCFS)</a></li>
+<li><a href="theory.html#rr">Round robin (RR)</a></li>
+<li><a href="theory.html#spn">Shortest process next (SPN)</a></li>
+<li><a href="theory.html#srt">Shortest remaining time (SRT)</a></li>
+<li><a href="theory.html#hrrn">Highest response ratio next (HRRN)</a></li>
+<li><a href="theory.html#feedback">Feedback (multilevel feedback queues)</a></li>
+<li><a href="theory.html#priority">Priority scheduling</a></li>
+<li><a href="theory.html#quantum">The effect of the time quantum</a></li>
+<li><a href="theory.html#compare">Comparing the policies</a></li>
+<li><a href="theory.html#extras">Other textbook topics (short)</a></li>
+</ul></details>
+<details class="section-nav__page is-current" open><summary><a href="examples.html" aria-current="page">Examples</a></summary><ul>
+<li><a href="#examples-workload">The workload for every example</a></li>
+<li><a href="#ex-fcfs-h">Example 1: First come, first served</a></li>
+<li><a href="#ex-rr-h">Example 2: Round robin with q = 2</a></li>
+<li><a href="#ex-spn-h">Example 3: Shortest process next</a></li>
+<li><a href="#ex-srt-h">Example 4: Shortest remaining time</a></li>
+<li><a href="#ex-hrrn-h">Example 5: Highest response ratio next</a></li>
+<li><a href="#ex-fb1-h">Example 6: Feedback with q = 1</a></li>
+<li><a href="#ex-fb2i-h">Example 7: Feedback with q = 2i</a></li>
+<li><a href="#ex-prio-h">Example 8: Non-preemptive priority</a></li>
+<li><a href="#ex-pprio-h">Example 9: Preemptive priority</a></li>
+<li><a href="#ex-compare-h">Example 10: Comparing the nine schedules</a></li>
+<li><a href="#ex-naming-h">Example 11: Naming the policy from a schedule</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="practice.html">Practice</a></summary><ul>
+<li><a href="practice.html#practice-tasks">Practice tasks</a></li>
+<li><a href="practice.html#pr-fcfs-h">Task 1: FCFS and the three measures</a></li>
+<li><a href="practice.html#pr-rr-h">Task 2: Round robin with q = 3</a></li>
+<li><a href="practice.html#pr-spn-h">Task 3: Shortest process next</a></li>
+<li><a href="practice.html#pr-srt-h">Task 4: Shortest remaining time with measures</a></li>
+<li><a href="practice.html#pr-hrrn-ratio-h">Task 5: HRRN: ratios at a decision time</a></li>
+<li><a href="practice.html#pr-hrrn-ms-h">Task 6: HRRN in milliseconds</a></li>
+<li><a href="practice.html#pr-fb1-h">Task 7: Feedback with q = 1</a></li>
+<li><a href="practice.html#pr-fb2i-h">Task 8: Feedback with q = 2i</a></li>
+<li><a href="practice.html#pr-fb3-h">Task 9: Feedback with three queues: two rules for the lowest queue</a></li>
+<li><a href="practice.html#pr-prio-h">Task 10: Priority: non-preemptive and preemptive</a></li>
+<li><a href="practice.html#pr-name-h">Task 11: Name the policy</a></li>
+<li><a href="practice.html#pr-quantum-h">Task 12: The effect of the quantum</a></li>
+<li><a href="practice.html#pr-types-h">Task 13: Four types of scheduling</a></li>
+<li><a href="practice.html#pr-selection-h">Task 14: Selection function, decision mode and starvation</a></li>
+<li><a href="practice.html#pr-criteria-h">Task 15: Criteria, triggers and the long-term decisions</a></li>
+<li><a href="practice.html#pr-fbq-h">Task 16: Feedback q = 1 compared with q = 2i</a></li>
+<li><a href="practice.html#past-papers-h">Past exam questions</a></li>
+<li><a href="practice.html#tut-lec-h">Tutorial and lecture problems</a></li>
+</ul></details>
+<details class="section-nav__page"><summary><a href="quiz.html">Quiz</a></summary><ul>
+<li><a href="quiz.html#quiz-types-h">Kinds of scheduling and criteria</a></li>
+<li><a href="quiz.html#quiz-policies-h">Selection functions and decision modes</a></li>
+<li><a href="quiz.html#quiz-numbers-h">Schedules and measures</a></li>
+<li><a href="quiz.html#quiz-hrrn-fb-h">HRRN and Feedback</a></li>
+<li><a href="quiz.html#quiz-quantum-h">Quantum and naming the policy</a></li>
+</ul></details>
+<a class="section-nav__mock" href="index.html#mock-test">Mock test</a>
+</div></details></aside>
+  <main class="chapter-page">
+<p class="mock-jump"><strong><a href="index.html#mock-test">Mock test</a></strong>: the question paper and its solutions (PDF).</p><section id="examples-intro"><h2 id="examples-workload">The workload for every example</h2><div class="table-wrap"><table class="attribute-table"><caption>Five processes (a lower priority number means a higher priority)</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival time</th><th scope="col">Service time</th><th scope="col">Priority</th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>3</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>4</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>5</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>2</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>1</td></tr></tbody></table></div><p>Write each schedule yourself before reading the decision table.</p><div class="table-wrap"><table class="attribute-table"><thead><tr><th scope="col">#</th><th scope="col">Example</th><th scope="col">What it practises</th></tr></thead><tbody><tr><td>1</td><td><a href="#ex-fcfs">First come, first served</a></td><td>Draw the schedule; measures</td></tr><tr><td>2</td><td><a href="#ex-rr">Round robin with q = 2</a></td><td>Draw the schedule; the same-instant rule</td></tr><tr><td>3</td><td><a href="#ex-spn">Shortest process next</a></td><td>Draw the schedule; measures</td></tr><tr><td>4</td><td><a href="#ex-srt">Shortest remaining time</a></td><td>Preemption at arrivals; measures</td></tr><tr><td>5</td><td><a href="#ex-hrrn">Highest response ratio next</a></td><td>Response ratios at each decision</td></tr><tr><td>6</td><td><a href="#ex-fb1">Feedback with q = 1</a></td><td>Feedback queues with one quantum</td></tr><tr><td>7</td><td><a href="#ex-fb2i">Feedback with q = 2<sup>i</sup></a></td><td>Feedback queues with growing quanta</td></tr><tr><td>8</td><td><a href="#ex-prio">Non-preemptive priority</a></td><td>Priority without preemption</td></tr><tr><td>9</td><td><a href="#ex-pprio">Preemptive priority</a></td><td>Priority with preemption</td></tr><tr><td>10</td><td><a href="#ex-compare">Comparing the nine schedules</a></td><td>Means for every policy</td></tr><tr><td>11</td><td><a href="#ex-naming">Naming the policy from a schedule</a></td><td>Name the policy</td></tr></tbody></table></div></section><section class="example" id="ex-fcfs"><h2 id="ex-fcfs-h">Example 1: First come, first served</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--method"><p class="block__label">How to decide</p><p>Whenever the processor is free, take the process that arrived first.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: FCFS</caption><thead><tr><th scope="col">Time</th><th scope="col">Ready processes (time left)</th><th scope="col">Choice</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>0</td><td>P1: 6 left</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>6</td><td>P2: 1 left, P3: 5 left, P4: 4 left</td><td><strong>P2</strong></td><td>P2 arrived first (at 2), so it has waited longest</td></tr><tr><td>7</td><td>P3: 5 left, P4: 4 left</td><td><strong>P3</strong></td><td>P3 arrived first (at 4), so it has waited longest</td></tr><tr><td>12</td><td>P4: 4 left, P5: 2 left</td><td><strong>P4</strong></td><td>P4 arrived first (at 5), so it has waited longest</td></tr><tr><td>16</td><td>P5: 2 left</td><td><strong>P5</strong></td><td>P5 is the only process ready</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="FCFS time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">FCFS</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>FCFS: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for FCFS</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>6</td><td>6 &minus; 0 = 6</td><td>6/6 = 1</td><td>6 &minus; 6 = 0</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>7</td><td>7 &minus; 2 = 5</td><td>5/1 = 5</td><td>5 &minus; 1 = 4</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>12</td><td>12 &minus; 4 = 8</td><td>8/5 = 1.60</td><td>8 &minus; 5 = 3</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>16</td><td>16 &minus; 5 = 11</td><td>11/4 = 2.75</td><td>11 &minus; 4 = 7</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>18</td><td>18 &minus; 8 = 10</td><td>10/2 = 5</td><td>10 &minus; 2 = 8</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>40/5 = 8</strong></td><td><strong>3.07</strong></td><td><strong>22/5 = 4.40</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Without looking at the table below the grid, give T<sub>r</sub>, T<sub>r</sub>/T<sub>s</sub> and the waiting time of P3.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-fcfs-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-fcfs-solution" class="reveal__body" data-practice-solution hidden><p>P3 finishes at 12. T<sub>r</sub> = 12 &minus; 4 = 8; T<sub>r</sub>/T<sub>s</sub> = 8/5 = 1.60; waiting = 8 &minus; 5 = 3.</p></div></section></section></section><section class="example" id="ex-rr"><h2 id="ex-rr-h">Example 2: Round robin with q = 2</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--method"><p class="block__label">How to decide</p><p>Keep a queue. A process runs for at most 2 units, then goes to the back. A new arrival joins the queue before a process whose quantum ends at the same time.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: RR q=2</caption><thead><tr><th scope="col">Time</th><th scope="col">What happens</th><th scope="col">Ready queue after the choice (front first)</th><th scope="col">Runs next</th><th scope="col">Time left (unfinished processes)</th></tr></thead><tbody><tr><td>0</td><td>Arrives: P1 (joins the back of the queue)</td><td>empty</td><td><strong>P1</strong> (starts a new quantum of 2)</td><td>P1: 6</td></tr><tr><td>2</td><td>P1's quantum ends. P2 arrives at the same moment, so P2 joins the queue first and P1 goes behind it.</td><td>P1</td><td><strong>P2</strong> (starts a new quantum of 2)</td><td>P1: 4, P2: 1</td></tr><tr><td>3</td><td>P2 finishes</td><td>empty</td><td><strong>P1</strong> (starts a new quantum of 2)</td><td>P1: 4</td></tr><tr><td>4</td><td>Arrives: P3 (joins the back of the queue); P1 is in the middle of its quantum, so it continues</td><td>P3</td><td>P1 continues</td><td>P1: 3, P3: 5</td></tr><tr><td>5</td><td>P1's quantum ends. P4 arrives at the same moment, so P4 joins the queue first and P1 goes behind it.</td><td>P4, P1</td><td><strong>P3</strong> (starts a new quantum of 2)</td><td>P1: 2, P3: 5, P4: 4</td></tr><tr><td>7</td><td>P3's quantum ends and P3 goes to the back of the queue.</td><td>P1, P3</td><td><strong>P4</strong> (starts a new quantum of 2)</td><td>P1: 2, P3: 3, P4: 4</td></tr><tr><td>8</td><td>Arrives: P5 (joins the back of the queue); P4 is in the middle of its quantum, so it continues</td><td>P1, P3, P5</td><td>P4 continues</td><td>P1: 2, P3: 3, P4: 3, P5: 2</td></tr><tr><td>9</td><td>P4's quantum ends and P4 goes to the back of the queue.</td><td>P3, P5, P4</td><td><strong>P1</strong> (starts a new quantum of 2)</td><td>P1: 2, P3: 3, P4: 2, P5: 2</td></tr><tr><td>11</td><td>P1 finishes</td><td>P5, P4</td><td><strong>P3</strong> (starts a new quantum of 2)</td><td>P3: 3, P4: 2, P5: 2</td></tr><tr><td>13</td><td>P3's quantum ends and P3 goes to the back of the queue.</td><td>P4, P3</td><td><strong>P5</strong> (starts a new quantum of 2)</td><td>P3: 1, P4: 2, P5: 2</td></tr><tr><td>15</td><td>P5 finishes</td><td>P3</td><td><strong>P4</strong> (starts a new quantum of 2)</td><td>P3: 1, P4: 2</td></tr><tr><td>17</td><td>P4 finishes</td><td>empty</td><td><strong>P3</strong> (starts a new quantum of 2)</td><td>P3: 1</td></tr><tr><td>18</td><td>P3 finishes</td><td>empty</td><td>&ndash;</td><td>all done</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="RR q=2 time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">RR q=2</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>RR q=2: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for RR q=2</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>11</td><td>11 &minus; 0 = 11</td><td>11/6 = 1.83</td><td>11 &minus; 6 = 5</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>3</td><td>3 &minus; 2 = 1</td><td>1/1 = 1</td><td>1 &minus; 1 = 0</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>18</td><td>18 &minus; 4 = 14</td><td>14/5 = 2.80</td><td>14 &minus; 5 = 9</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>17</td><td>17 &minus; 5 = 12</td><td>12/4 = 3</td><td>12 &minus; 4 = 8</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>15</td><td>15 &minus; 8 = 7</td><td>7/2 = 3.50</td><td>7 &minus; 2 = 5</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>45/5 = 9</strong></td><td><strong>2.43</strong></td><td><strong>27/5 = 5.40</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Which process waits longest in this schedule (there may be more than one)? Give the finish time, T<sub>r</sub> and waiting time of each.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-rr-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-rr-solution" class="reveal__body" data-practice-solution hidden><p>P3: finish 18, T<sub>r</sub> = 18 &minus; 4 = 14, waiting = 14 &minus; 5 = 9.</p></div></section></section></section><section class="example" id="ex-spn"><h2 id="ex-spn-h">Example 3: Shortest process next</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--method"><p class="block__label">How to decide</p><p>Whenever the processor is free, take the ready process with the smallest service time. No preemption.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: SPN</caption><thead><tr><th scope="col">Time</th><th scope="col">Ready processes (time left)</th><th scope="col">Choice</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>0</td><td>P1: 6 left</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>6</td><td>P2: 1 left, P3: 5 left, P4: 4 left</td><td><strong>P2</strong></td><td>P2 has the shortest service time (s = 1)</td></tr><tr><td>7</td><td>P3: 5 left, P4: 4 left</td><td><strong>P4</strong></td><td>P4 has the shortest service time (s = 4)</td></tr><tr><td>11</td><td>P3: 5 left, P5: 2 left</td><td><strong>P5</strong></td><td>P5 has the shortest service time (s = 2)</td></tr><tr><td>13</td><td>P3: 5 left</td><td><strong>P3</strong></td><td>P3 is the only process ready</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="SPN time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">SPN</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>SPN: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for SPN</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>6</td><td>6 &minus; 0 = 6</td><td>6/6 = 1</td><td>6 &minus; 6 = 0</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>7</td><td>7 &minus; 2 = 5</td><td>5/1 = 5</td><td>5 &minus; 1 = 4</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>18</td><td>18 &minus; 4 = 14</td><td>14/5 = 2.80</td><td>14 &minus; 5 = 9</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>11</td><td>11 &minus; 5 = 6</td><td>6/4 = 1.50</td><td>6 &minus; 4 = 2</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>13</td><td>13 &minus; 8 = 5</td><td>5/2 = 2.50</td><td>5 &minus; 2 = 3</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>36/5 = 7.20</strong></td><td><strong>2.56</strong></td><td><strong>18/5 = 3.60</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Without looking at the table below the grid, give T<sub>r</sub>, T<sub>r</sub>/T<sub>s</sub> and the waiting time of P3.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-spn-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-spn-solution" class="reveal__body" data-practice-solution hidden><p>P3 finishes at 18. T<sub>r</sub> = 18 &minus; 4 = 14; T<sub>r</sub>/T<sub>s</sub> = 14/5 = 2.80; waiting = 14 &minus; 5 = 9.</p></div></section></section></section><section class="example" id="ex-srt"><h2 id="ex-srt-h">Example 4: Shortest remaining time</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--method"><p class="block__label">How to decide</p><p>At time 0, at every arrival and whenever a process finishes, run the process with the least time left. A newcomer preempts only if it needs strictly less.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: SRT</caption><thead><tr><th scope="col">Time</th><th scope="col">Ready processes (time left)</th><th scope="col">Choice</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>0</td><td>P1: 6 left</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>2</td><td>P1: 4 left (running), P2: 1 left</td><td><strong>P2</strong></td><td>P2 needs 1, less than the 4 that P1 still needs, so P2 preempts P1</td></tr><tr><td>3</td><td>P1: 4 left</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>4</td><td>P1: 3 left (running), P3: 5 left</td><td><strong>P1</strong></td><td>P3 arrives needing 5; P1 has 3 left. 5 is not less than 3, so P1 keeps running</td></tr><tr><td>5</td><td>P1: 2 left (running), P3: 5 left, P4: 4 left</td><td><strong>P1</strong></td><td>P4 arrives needing 4; P1 has 2 left. 4 is not less than 2, so P1 keeps running</td></tr><tr><td>7</td><td>P3: 5 left, P4: 4 left</td><td><strong>P4</strong></td><td>P4 has the least time left (4)</td></tr><tr><td>8</td><td>P3: 5 left, P4: 3 left (running), P5: 2 left</td><td><strong>P5</strong></td><td>P5 needs 2, less than the 3 that P4 still needs, so P5 preempts P4</td></tr><tr><td>10</td><td>P3: 5 left, P4: 3 left</td><td><strong>P4</strong></td><td>P4 has the least time left (3)</td></tr><tr><td>13</td><td>P3: 5 left</td><td><strong>P3</strong></td><td>P3 is the only process ready</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="SRT time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">SRT</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>SRT: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for SRT</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>7</td><td>7 &minus; 0 = 7</td><td>7/6 = 1.17</td><td>7 &minus; 6 = 1</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>3</td><td>3 &minus; 2 = 1</td><td>1/1 = 1</td><td>1 &minus; 1 = 0</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>18</td><td>18 &minus; 4 = 14</td><td>14/5 = 2.80</td><td>14 &minus; 5 = 9</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>13</td><td>13 &minus; 5 = 8</td><td>8/4 = 2</td><td>8 &minus; 4 = 4</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>10</td><td>10 &minus; 8 = 2</td><td>2/2 = 1</td><td>2 &minus; 2 = 0</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>32/5 = 6.40</strong></td><td><strong>1.59</strong></td><td><strong>14/5 = 2.80</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Without looking at the table below the grid, give T<sub>r</sub>, T<sub>r</sub>/T<sub>s</sub> and the waiting time of P3.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-srt-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-srt-solution" class="reveal__body" data-practice-solution hidden><p>P3 finishes at 18. T<sub>r</sub> = 18 &minus; 4 = 14; T<sub>r</sub>/T<sub>s</sub> = 14/5 = 2.80; waiting = 14 &minus; 5 = 9.</p></div></section></section></section><section class="example" id="ex-hrrn"><h2 id="ex-hrrn-h">Example 5: Highest response ratio next</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--method"><p class="block__label">How to decide</p><p>Whenever the processor is free, compute R = (w + s)/s for every ready process and take the highest. No preemption.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: HRRN</caption><thead><tr><th scope="col">Time</th><th scope="col">Ready processes (time left)</th><th scope="col">Choice</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>0</td><td>P1 (w = 0, s = 6)</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>6</td><td>P2 (w = 4, s = 1), P3 (w = 2, s = 5), P4 (w = 1, s = 4)</td><td><strong>P2</strong></td><td>R<sub>P2</sub> = (4 + 1)/1 = 5; R<sub>P3</sub> = (2 + 5)/5 = 1.40; R<sub>P4</sub> = (1 + 4)/4 = 1.25. Highest: P2</td></tr><tr><td>7</td><td>P3 (w = 3, s = 5), P4 (w = 2, s = 4)</td><td><strong>P3</strong></td><td>R<sub>P3</sub> = (3 + 5)/5 = 1.60; R<sub>P4</sub> = (2 + 4)/4 = 1.50. Highest: P3</td></tr><tr><td>12</td><td>P4 (w = 7, s = 4), P5 (w = 4, s = 2)</td><td><strong>P5</strong></td><td>R<sub>P4</sub> = (7 + 4)/4 = 2.75; R<sub>P5</sub> = (4 + 2)/2 = 3. Highest: P5</td></tr><tr><td>14</td><td>P4 (w = 9, s = 4)</td><td><strong>P4</strong></td><td>P4 is the only process ready</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="HRRN time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">HRRN</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>HRRN: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for HRRN</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>6</td><td>6 &minus; 0 = 6</td><td>6/6 = 1</td><td>6 &minus; 6 = 0</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>7</td><td>7 &minus; 2 = 5</td><td>5/1 = 5</td><td>5 &minus; 1 = 4</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>12</td><td>12 &minus; 4 = 8</td><td>8/5 = 1.60</td><td>8 &minus; 5 = 3</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>18</td><td>18 &minus; 5 = 13</td><td>13/4 = 3.25</td><td>13 &minus; 4 = 9</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>14</td><td>14 &minus; 8 = 6</td><td>6/2 = 3</td><td>6 &minus; 2 = 4</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>38/5 = 7.60</strong></td><td><strong>2.77</strong></td><td><strong>20/5 = 4</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>At time 6, why does P2 run and not the shortest ready process?</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-hrrn-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-hrrn-solution" class="reveal__body" data-practice-solution hidden><p>At time 6 the ratios are P2: 5, P3: 1.40, P4: 1.25. P2 has the highest ratio. HRRN ranks by R, not by s alone, so a process that has waited long can beat a shorter one.</p></div></section></section></section><section class="example" id="ex-fb1"><h2 id="ex-fb1-h">Example 6: Feedback with q = 1</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--definition"><p class="block__label">Feedback rules for this question</p><ul><li>Quantum: q = 1 in every queue.</li><li>A new process joins the back of RQ0 (RQ means ready queue).</li><li>The scheduler runs the front process of the highest queue that is not empty. Each queue is FCFS.</li><li>Preemption happens only when a quantum ends. A process that arrives in the middle of a quantum waits.</li><li>If a process uses its whole quantum and another process is waiting, it moves down one queue. If nothing else is waiting, it stays and starts a new quantum.</li><li>There is no lowest queue: the number of queues is not limited, so a process that is preempted always moves down one more queue (the textbook rule).</li></ul></section><section class="block block--method"><p class="block__label">How to decide</p><p>Follow the Feedback rules in the box. Track each queue separately.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: FB q=1</caption><thead><tr><th scope="col">Time</th><th scope="col">What happens</th><th scope="col">Ready queue(s) after the choice</th><th scope="col">Runs next</th><th scope="col">Time left (unfinished processes)</th></tr></thead><tbody><tr><td>0</td><td>Arrives: P1 (joins RQ0)</td><td>all empty</td><td><strong>P1</strong> from RQ0 (q = 1)</td><td>P1: 6</td></tr><tr><td>1</td><td>P1 uses its whole quantum, but nothing else is waiting, so it stays in RQ0 and starts a new quantum</td><td>all empty</td><td><strong>P1</strong> continues</td><td>P1: 5</td></tr><tr><td>2</td><td>Arrives: P2 (joins RQ0); P1 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P1</td><td><strong>P2</strong> from RQ0 (q = 1)</td><td>P1: 4, P2: 1</td></tr><tr><td>3</td><td>P2 finishes</td><td>all empty</td><td><strong>P1</strong> from RQ1 (q = 1)</td><td>P1: 4</td></tr><tr><td>4</td><td>Arrives: P3 (joins RQ0); P1 uses its whole quantum in RQ1 and moves down to RQ2</td><td>RQ2: P1</td><td><strong>P3</strong> from RQ0 (q = 1)</td><td>P1: 3, P3: 5</td></tr><tr><td>5</td><td>Arrives: P4 (joins RQ0); P3 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P3; RQ2: P1</td><td><strong>P4</strong> from RQ0 (q = 1)</td><td>P1: 3, P3: 4, P4: 4</td></tr><tr><td>6</td><td>P4 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P4; RQ2: P1</td><td><strong>P3</strong> from RQ1 (q = 1)</td><td>P1: 3, P3: 4, P4: 3</td></tr><tr><td>7</td><td>P3 uses its whole quantum in RQ1 and moves down to RQ2</td><td>RQ2: P1, P3</td><td><strong>P4</strong> from RQ1 (q = 1)</td><td>P1: 3, P3: 3, P4: 3</td></tr><tr><td>8</td><td>Arrives: P5 (joins RQ0); P4 uses its whole quantum in RQ1 and moves down to RQ2</td><td>RQ2: P1, P3, P4</td><td><strong>P5</strong> from RQ0 (q = 1)</td><td>P1: 3, P3: 3, P4: 2, P5: 2</td></tr><tr><td>9</td><td>P5 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ2: P1, P3, P4</td><td><strong>P5</strong> from RQ1 (q = 1)</td><td>P1: 3, P3: 3, P4: 2, P5: 1</td></tr><tr><td>10</td><td>P5 finishes</td><td>RQ2: P3, P4</td><td><strong>P1</strong> from RQ2 (q = 1)</td><td>P1: 3, P3: 3, P4: 2</td></tr><tr><td>11</td><td>P1 uses its whole quantum in RQ2 and moves down to RQ3</td><td>RQ2: P4; RQ3: P1</td><td><strong>P3</strong> from RQ2 (q = 1)</td><td>P1: 2, P3: 3, P4: 2</td></tr><tr><td>12</td><td>P3 uses its whole quantum in RQ2 and moves down to RQ3</td><td>RQ3: P1, P3</td><td><strong>P4</strong> from RQ2 (q = 1)</td><td>P1: 2, P3: 2, P4: 2</td></tr><tr><td>13</td><td>P4 uses its whole quantum in RQ2 and moves down to RQ3</td><td>RQ3: P3, P4</td><td><strong>P1</strong> from RQ3 (q = 1)</td><td>P1: 2, P3: 2, P4: 1</td></tr><tr><td>14</td><td>P1 uses its whole quantum in RQ3 and moves down to RQ4</td><td>RQ3: P4; RQ4: P1</td><td><strong>P3</strong> from RQ3 (q = 1)</td><td>P1: 1, P3: 2, P4: 1</td></tr><tr><td>15</td><td>P3 uses its whole quantum in RQ3 and moves down to RQ4</td><td>RQ4: P1, P3</td><td><strong>P4</strong> from RQ3 (q = 1)</td><td>P1: 1, P3: 1, P4: 1</td></tr><tr><td>16</td><td>P4 finishes</td><td>RQ4: P3</td><td><strong>P1</strong> from RQ4 (q = 1)</td><td>P1: 1, P3: 1</td></tr><tr><td>17</td><td>P1 finishes</td><td>all empty</td><td><strong>P3</strong> from RQ4 (q = 1)</td><td>P3: 1</td></tr><tr><td>18</td><td>P3 finishes</td><td>all empty</td><td>&ndash;</td><td>all done</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="FB q=1 time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">FB q=1</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>FB q=1: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for FB q=1</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>17</td><td>17 &minus; 0 = 17</td><td>17/6 = 2.83</td><td>17 &minus; 6 = 11</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>3</td><td>3 &minus; 2 = 1</td><td>1/1 = 1</td><td>1 &minus; 1 = 0</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>18</td><td>18 &minus; 4 = 14</td><td>14/5 = 2.80</td><td>14 &minus; 5 = 9</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>16</td><td>16 &minus; 5 = 11</td><td>11/4 = 2.75</td><td>11 &minus; 4 = 7</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>10</td><td>10 &minus; 8 = 2</td><td>2/2 = 1</td><td>2 &minus; 2 = 0</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>45/5 = 9</strong></td><td><strong>2.08</strong></td><td><strong>27/5 = 5.40</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Which process waits longest in this schedule (there may be more than one)? Give the finish time, T<sub>r</sub> and waiting time of each.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-fb1-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-fb1-solution" class="reveal__body" data-practice-solution hidden><p>P1: finish 17, T<sub>r</sub> = 17 &minus; 0 = 17, waiting = 17 &minus; 6 = 11.</p></div></section></section></section><section class="example" id="ex-fb2i"><h2 id="ex-fb2i-h">Example 7: Feedback with q = 2<sup>i</sup></h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page.</p><section class="block block--definition"><p class="block__label">Feedback rules for this question</p><ul><li>Quantum: q = 2<sup>i</sup>: RQ0 has q = 1, RQ1 has q = 2, RQ2 has q = 4, RQ3 has q = 8, and so on.</li><li>A new process joins the back of RQ0 (RQ means ready queue).</li><li>The scheduler runs the front process of the highest queue that is not empty. Each queue is FCFS.</li><li>Preemption happens only when a quantum ends. A process that arrives in the middle of a quantum waits.</li><li>If a process uses its whole quantum and another process is waiting, it moves down one queue. If nothing else is waiting, it stays and starts a new quantum.</li><li>There is no lowest queue: the number of queues is not limited, so a process that is preempted always moves down one more queue (the textbook rule).</li></ul></section><section class="block block--method"><p class="block__label">How to decide</p><p>Follow the Feedback rules in the box. Track each queue and the quantum of that queue.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: FB q=2^i</caption><thead><tr><th scope="col">Time</th><th scope="col">What happens</th><th scope="col">Ready queue(s) after the choice</th><th scope="col">Runs next</th><th scope="col">Time left (unfinished processes)</th></tr></thead><tbody><tr><td>0</td><td>Arrives: P1 (joins RQ0)</td><td>all empty</td><td><strong>P1</strong> from RQ0 (q = 1)</td><td>P1: 6</td></tr><tr><td>1</td><td>P1 uses its whole quantum, but nothing else is waiting, so it stays in RQ0 and starts a new quantum</td><td>all empty</td><td><strong>P1</strong> continues</td><td>P1: 5</td></tr><tr><td>2</td><td>Arrives: P2 (joins RQ0); P1 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P1</td><td><strong>P2</strong> from RQ0 (q = 1)</td><td>P1: 4, P2: 1</td></tr><tr><td>3</td><td>P2 finishes</td><td>all empty</td><td><strong>P1</strong> from RQ1 (q = 2)</td><td>P1: 4</td></tr><tr><td>4</td><td>Arrives: P3 (joins RQ0); P1 is in the middle of its quantum; Feedback preempts only when a quantum ends, so P1 continues</td><td>RQ0: P3</td><td>P1 continues</td><td>P1: 3, P3: 5</td></tr><tr><td>5</td><td>Arrives: P4 (joins RQ0); P1 uses its whole quantum in RQ1 and moves down to RQ2</td><td>RQ0: P4; RQ2: P1</td><td><strong>P3</strong> from RQ0 (q = 1)</td><td>P1: 2, P3: 5, P4: 4</td></tr><tr><td>6</td><td>P3 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P3; RQ2: P1</td><td><strong>P4</strong> from RQ0 (q = 1)</td><td>P1: 2, P3: 4, P4: 4</td></tr><tr><td>7</td><td>P4 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P4; RQ2: P1</td><td><strong>P3</strong> from RQ1 (q = 2)</td><td>P1: 2, P3: 4, P4: 3</td></tr><tr><td>8</td><td>Arrives: P5 (joins RQ0); P3 is in the middle of its quantum; Feedback preempts only when a quantum ends, so P3 continues</td><td>RQ0: P5; RQ1: P4; RQ2: P1</td><td>P3 continues</td><td>P1: 2, P3: 3, P4: 3, P5: 2</td></tr><tr><td>9</td><td>P3 uses its whole quantum in RQ1 and moves down to RQ2</td><td>RQ1: P4; RQ2: P1, P3</td><td><strong>P5</strong> from RQ0 (q = 1)</td><td>P1: 2, P3: 2, P4: 3, P5: 2</td></tr><tr><td>10</td><td>P5 uses its whole quantum in RQ0 and moves down to RQ1</td><td>RQ1: P5; RQ2: P1, P3</td><td><strong>P4</strong> from RQ1 (q = 2)</td><td>P1: 2, P3: 2, P4: 3, P5: 1</td></tr><tr><td>12</td><td>P4 uses its whole quantum in RQ1 and moves down to RQ2</td><td>RQ2: P1, P3, P4</td><td><strong>P5</strong> from RQ1 (q = 2)</td><td>P1: 2, P3: 2, P4: 1, P5: 1</td></tr><tr><td>13</td><td>P5 finishes</td><td>RQ2: P3, P4</td><td><strong>P1</strong> from RQ2 (q = 4)</td><td>P1: 2, P3: 2, P4: 1</td></tr><tr><td>15</td><td>P1 finishes</td><td>RQ2: P4</td><td><strong>P3</strong> from RQ2 (q = 4)</td><td>P3: 2, P4: 1</td></tr><tr><td>17</td><td>P3 finishes</td><td>all empty</td><td><strong>P4</strong> from RQ2 (q = 4)</td><td>P4: 1</td></tr><tr><td>18</td><td>P4 finishes</td><td>all empty</td><td>&ndash;</td><td>all done</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="FB q=2^i time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">FB q=2^i</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>FB q=2^i: the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for FB q=2^i</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>15</td><td>15 &minus; 0 = 15</td><td>15/6 = 2.50</td><td>15 &minus; 6 = 9</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>3</td><td>3 &minus; 2 = 1</td><td>1/1 = 1</td><td>1 &minus; 1 = 0</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>17</td><td>17 &minus; 4 = 13</td><td>13/5 = 2.60</td><td>13 &minus; 5 = 8</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>18</td><td>18 &minus; 5 = 13</td><td>13/4 = 3.25</td><td>13 &minus; 4 = 9</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>13</td><td>13 &minus; 8 = 5</td><td>5/2 = 2.50</td><td>5 &minus; 2 = 3</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>47/5 = 9.40</strong></td><td><strong>2.37</strong></td><td><strong>29/5 = 5.80</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Which process waits longest in this schedule (there may be more than one)? Give the finish time, T<sub>r</sub> and waiting time of each.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-fb2i-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-fb2i-solution" class="reveal__body" data-practice-solution hidden><p>P1 and P4 both wait 9. P1: finish 15, T<sub>r</sub> = 15 &minus; 0 = 15, waiting = 15 &minus; 6 = 9. P4: finish 18, T<sub>r</sub> = 18 &minus; 5 = 13, waiting = 13 &minus; 4 = 9.</p></div></section></section></section><section class="example" id="ex-prio"><h2 id="ex-prio-h">Example 8: Non-preemptive priority</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page (use the Priority column).</p><section class="block block--method"><p class="block__label">How to decide</p><p>Whenever the processor is free, take the ready process with the lowest priority number. No preemption.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: Priority (non-preemptive)</caption><thead><tr><th scope="col">Time</th><th scope="col">Ready processes (time left)</th><th scope="col">Choice</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>0</td><td>P1: 6 left</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>6</td><td>P2: 1 left, P3: 5 left, P4: 4 left</td><td><strong>P4</strong></td><td>P4 has the highest priority (lowest number, 2)</td></tr><tr><td>10</td><td>P2: 1 left, P3: 5 left, P5: 2 left</td><td><strong>P5</strong></td><td>P5 has the highest priority (lowest number, 1)</td></tr><tr><td>12</td><td>P2: 1 left, P3: 5 left</td><td><strong>P2</strong></td><td>P2 has the highest priority (lowest number, 4)</td></tr><tr><td>13</td><td>P3: 5 left</td><td><strong>P3</strong></td><td>P3 is the only process ready</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="Priority (non-preemptive) time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">Priority (non-preemptive)</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>Priority (non-preemptive): the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for Priority (non-preemptive)</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>6</td><td>6 &minus; 0 = 6</td><td>6/6 = 1</td><td>6 &minus; 6 = 0</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>13</td><td>13 &minus; 2 = 11</td><td>11/1 = 11</td><td>11 &minus; 1 = 10</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>18</td><td>18 &minus; 4 = 14</td><td>14/5 = 2.80</td><td>14 &minus; 5 = 9</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>10</td><td>10 &minus; 5 = 5</td><td>5/4 = 1.25</td><td>5 &minus; 4 = 1</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>12</td><td>12 &minus; 8 = 4</td><td>4/2 = 2</td><td>4 &minus; 2 = 2</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>40/5 = 8</strong></td><td><strong>3.61</strong></td><td><strong>22/5 = 4.40</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Without looking at the table below the grid, give T<sub>r</sub>, T<sub>r</sub>/T<sub>s</sub> and the waiting time of P3.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-prio-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-prio-solution" class="reveal__body" data-practice-solution hidden><p>P3 finishes at 18. T<sub>r</sub> = 18 &minus; 4 = 14; T<sub>r</sub>/T<sub>s</sub> = 14/5 = 2.80; waiting = 14 &minus; 5 = 9.</p></div></section></section></section><section class="example" id="ex-pprio"><h2 id="ex-pprio-h">Example 9: Preemptive priority</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Workload: the table at the top of the page (use the Priority column).</p><section class="block block--method"><p class="block__label">How to decide</p><p>Take the ready process with the lowest priority number. At every arrival, a newcomer with a strictly lower number preempts.</p></section><p>Each row is a moment when the scheduler makes or checks a decision.</p><div class="table-wrap"><table class="attribute-table decision-table"><caption>Decisions: Priority (preemptive)</caption><thead><tr><th scope="col">Time</th><th scope="col">Ready processes (time left)</th><th scope="col">Choice</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>0</td><td>P1: 6 left</td><td><strong>P1</strong></td><td>P1 is the only process ready</td></tr><tr><td>2</td><td>P1: 4 left (running), P2: 1 left</td><td><strong>P1</strong></td><td>P2 arrives with priority 4; P1 has priority 3. That is not higher, so P1 keeps running</td></tr><tr><td>4</td><td>P1: 2 left (running), P2: 1 left, P3: 5 left</td><td><strong>P1</strong></td><td>P3 arrives with priority 5; P1 has priority 3. That is not higher, so P1 keeps running</td></tr><tr><td>5</td><td>P1: 1 left (running), P2: 1 left, P3: 5 left, P4: 4 left</td><td><strong>P4</strong></td><td>P4 has priority 2, higher than P1 (priority 3), so P4 preempts P1</td></tr><tr><td>8</td><td>P1: 1 left, P2: 1 left, P3: 5 left, P4: 1 left (running), P5: 2 left</td><td><strong>P5</strong></td><td>P5 has priority 1, higher than P4 (priority 2), so P5 preempts P4</td></tr><tr><td>10</td><td>P1: 1 left, P2: 1 left, P3: 5 left, P4: 1 left</td><td><strong>P4</strong></td><td>P4 has the highest priority (lowest number, 2)</td></tr><tr><td>11</td><td>P1: 1 left, P2: 1 left, P3: 5 left</td><td><strong>P1</strong></td><td>P1 has the highest priority (lowest number, 3)</td></tr><tr><td>12</td><td>P2: 1 left, P3: 5 left</td><td><strong>P2</strong></td><td>P2 has the highest priority (lowest number, 4)</td></tr><tr><td>13</td><td>P3: 5 left</td><td><strong>P3</strong></td><td>P3 is the only process ready</td></tr></tbody></table></div><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 444 188" width="444" height="188" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="Priority (preemptive) time-scale diagram">
+<text x="32" y="18" fill="#1f2933" font-weight="bold">Priority (preemptive)</text>
+<text x="24" y="45.0" text-anchor="end" fill="#1f2933">P1</text>
+<rect x="32" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="31" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="31" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="71.0" text-anchor="end" fill="#1f2933">P2</text>
+<rect x="32" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="57" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="57" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="97.0" text-anchor="end" fill="#1f2933">P3</text>
+<rect x="32" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="83" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="83" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="123.0" text-anchor="end" fill="#1f2933">P4</text>
+<rect x="32" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="109" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="109" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<text x="24" y="149.0" text-anchor="end" fill="#1f2933">P5</text>
+<rect x="32" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="54" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="76" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="98" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="120" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="142" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="164" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="186" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="208" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="230" y="135" width="22" height="20" fill="#3b6fb6" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="252" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="274" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="296" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="318" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="340" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="362" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="384" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<rect x="406" y="135" width="22" height="20" fill="none" stroke="#9aa5b1" stroke-width="0.6"/>
+<line x1="32" y1="162" x2="428" y2="162" stroke="#1f2933"/>
+<line x1="32" y1="162" x2="32" y2="168" stroke="#1f2933"/>
+<text x="32" y="180" text-anchor="middle" fill="#1f2933">0</text>
+<line x1="54" y1="162" x2="54" y2="168" stroke="#1f2933"/>
+<text x="54" y="180" text-anchor="middle" fill="#1f2933">1</text>
+<line x1="76" y1="162" x2="76" y2="168" stroke="#1f2933"/>
+<text x="76" y="180" text-anchor="middle" fill="#1f2933">2</text>
+<line x1="98" y1="162" x2="98" y2="168" stroke="#1f2933"/>
+<text x="98" y="180" text-anchor="middle" fill="#1f2933">3</text>
+<line x1="120" y1="162" x2="120" y2="168" stroke="#1f2933"/>
+<text x="120" y="180" text-anchor="middle" fill="#1f2933">4</text>
+<line x1="142" y1="162" x2="142" y2="168" stroke="#1f2933"/>
+<text x="142" y="180" text-anchor="middle" fill="#1f2933">5</text>
+<line x1="164" y1="162" x2="164" y2="168" stroke="#1f2933"/>
+<text x="164" y="180" text-anchor="middle" fill="#1f2933">6</text>
+<line x1="186" y1="162" x2="186" y2="168" stroke="#1f2933"/>
+<text x="186" y="180" text-anchor="middle" fill="#1f2933">7</text>
+<line x1="208" y1="162" x2="208" y2="168" stroke="#1f2933"/>
+<text x="208" y="180" text-anchor="middle" fill="#1f2933">8</text>
+<line x1="230" y1="162" x2="230" y2="168" stroke="#1f2933"/>
+<text x="230" y="180" text-anchor="middle" fill="#1f2933">9</text>
+<line x1="252" y1="162" x2="252" y2="168" stroke="#1f2933"/>
+<text x="252" y="180" text-anchor="middle" fill="#1f2933">10</text>
+<line x1="274" y1="162" x2="274" y2="168" stroke="#1f2933"/>
+<text x="274" y="180" text-anchor="middle" fill="#1f2933">11</text>
+<line x1="296" y1="162" x2="296" y2="168" stroke="#1f2933"/>
+<text x="296" y="180" text-anchor="middle" fill="#1f2933">12</text>
+<line x1="318" y1="162" x2="318" y2="168" stroke="#1f2933"/>
+<text x="318" y="180" text-anchor="middle" fill="#1f2933">13</text>
+<line x1="340" y1="162" x2="340" y2="168" stroke="#1f2933"/>
+<text x="340" y="180" text-anchor="middle" fill="#1f2933">14</text>
+<line x1="362" y1="162" x2="362" y2="168" stroke="#1f2933"/>
+<text x="362" y="180" text-anchor="middle" fill="#1f2933">15</text>
+<line x1="384" y1="162" x2="384" y2="168" stroke="#1f2933"/>
+<text x="384" y="180" text-anchor="middle" fill="#1f2933">16</text>
+<line x1="406" y1="162" x2="406" y2="168" stroke="#1f2933"/>
+<text x="406" y="180" text-anchor="middle" fill="#1f2933">17</text>
+<line x1="428" y1="162" x2="428" y2="168" stroke="#1f2933"/>
+<text x="428" y="180" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>Priority (preemptive): the schedule.</figcaption></figure><div class="table-wrap"><table class="attribute-table"><caption>Measures for Priority (preemptive)</caption><thead><tr><th scope="col">Process</th><th scope="col">Arrival</th><th scope="col">Service T<sub>s</sub></th><th scope="col">Finish</th><th scope="col">Turnaround T<sub>r</sub> = finish &minus; arrival</th><th scope="col">T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Waiting = T<sub>r</sub> &minus; T<sub>s</sub></th></tr></thead><tbody><tr><td>P1</td><td>0</td><td>6</td><td>12</td><td>12 &minus; 0 = 12</td><td>12/6 = 2</td><td>12 &minus; 6 = 6</td></tr><tr><td>P2</td><td>2</td><td>1</td><td>13</td><td>13 &minus; 2 = 11</td><td>11/1 = 11</td><td>11 &minus; 1 = 10</td></tr><tr><td>P3</td><td>4</td><td>5</td><td>18</td><td>18 &minus; 4 = 14</td><td>14/5 = 2.80</td><td>14 &minus; 5 = 9</td></tr><tr><td>P4</td><td>5</td><td>4</td><td>11</td><td>11 &minus; 5 = 6</td><td>6/4 = 1.50</td><td>6 &minus; 4 = 2</td></tr><tr><td>P5</td><td>8</td><td>2</td><td>10</td><td>10 &minus; 8 = 2</td><td>2/2 = 1</td><td>2 &minus; 2 = 0</td></tr><tr><td><strong>Mean</strong></td><td></td><td></td><td></td><td><strong>45/5 = 9</strong></td><td><strong>3.66</strong></td><td><strong>27/5 = 5.40</strong></td></tr></tbody></table></div><section class="block block--check"><p class="block__label">Try this</p><p>Without looking at the table below the grid, give T<sub>r</sub>, T<sub>r</sub>/T<sub>s</sub> and the waiting time of P3.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-pprio-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-pprio-solution" class="reveal__body" data-practice-solution hidden><p>P3 finishes at 18. T<sub>r</sub> = 18 &minus; 4 = 14; T<sub>r</sub>/T<sub>s</sub> = 14/5 = 2.80; waiting = 14 &minus; 5 = 9.</p></div></section></section></section><section class="example" id="ex-compare"><h2 id="ex-compare-h">Example 10: Comparing the nine schedules</h2><div class="table-wrap"><table class="attribute-table"><thead><tr><th scope="col">Policy</th><th scope="col">Schedule (one name per time unit)</th><th scope="col">Mean T<sub>r</sub></th><th scope="col">Mean T<sub>r</sub>/T<sub>s</sub></th><th scope="col">Mean waiting</th></tr></thead><tbody><tr><td>FCFS</td><td>P1 P1 P1 P1 P1 P1 P2 P3 P3 P3 P3 P3 P4 P4 P4 P4 P5 P5</td><td>8</td><td>3.07</td><td>4.40</td></tr><tr><td>RR q=2</td><td>P1 P1 P2 P1 P1 P3 P3 P4 P4 P1 P1 P3 P3 P5 P5 P4 P4 P3</td><td>9</td><td>2.43</td><td>5.40</td></tr><tr><td>SPN</td><td>P1 P1 P1 P1 P1 P1 P2 P4 P4 P4 P4 P5 P5 P3 P3 P3 P3 P3</td><td>7.20</td><td>2.56</td><td>3.60</td></tr><tr><td>SRT</td><td>P1 P1 P2 P1 P1 P1 P1 P4 P5 P5 P4 P4 P4 P3 P3 P3 P3 P3</td><td>6.40</td><td>1.59</td><td>2.80</td></tr><tr><td>HRRN</td><td>P1 P1 P1 P1 P1 P1 P2 P3 P3 P3 P3 P3 P5 P5 P4 P4 P4 P4</td><td>7.60</td><td>2.77</td><td>4</td></tr><tr><td>FB q=1</td><td>P1 P1 P2 P1 P3 P4 P3 P4 P5 P5 P1 P3 P4 P1 P3 P4 P1 P3</td><td>9</td><td>2.08</td><td>5.40</td></tr><tr><td>FB q=2^i</td><td>P1 P1 P2 P1 P1 P3 P4 P3 P3 P5 P4 P4 P5 P1 P1 P3 P3 P4</td><td>9.40</td><td>2.37</td><td>5.80</td></tr><tr><td>Priority (non-preemptive)</td><td>P1 P1 P1 P1 P1 P1 P4 P4 P4 P4 P5 P5 P2 P3 P3 P3 P3 P3</td><td>8</td><td>3.61</td><td>4.40</td></tr><tr><td>Priority (preemptive)</td><td>P1 P1 P1 P1 P1 P4 P4 P4 P5 P5 P4 P1 P2 P3 P3 P3 P3 P3</td><td>9</td><td>3.66</td><td>5.40</td></tr></tbody></table></div><p>On this workload SRT gives the lowest mean turnaround (6.40). SRT and SPN do well because they run short processes first; that is also why long processes can starve under them.</p><section class="block block--check"><p class="block__label">Try this</p><p>Under FCFS, which process has the largest T<sub>r</sub>/T<sub>s</sub> (there may be more than one), and why?</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-compare-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-compare-solution" class="reveal__body" data-practice-solution hidden><p>P2: T<sub>r</sub> = 5, T<sub>s</sub> = 1, T<sub>r</sub>/T<sub>s</sub> = 5/1 = 5 and P5: T<sub>r</sub> = 10, T<sub>s</sub> = 2, T<sub>r</sub>/T<sub>s</sub> = 10/2 = 5.</p><p>Both are short. P2 needs 1 unit but arrives while P1 (6 units) runs; P5 needs 2 units but arrives while P3 runs and P4 is waiting. FCFS never preempts and never lets a short process go first, so short processes wait longest compared with what they need.</p></div></section></section></section><section class="example" id="ex-naming"><h2 id="ex-naming-h">Example 11: Naming the policy from a schedule</h2><p><span class="difficulty difficulty--medium">Exam-typical (level 2 of 3)</span> Same shape as a past exam question.</p><p>A schedule for the workload at the top of the page is given. Name a policy that produces it.</p><figure class="teaching-figure svg-figure"><div class="svg-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 714 64" width="714" height="64" font-family="Arial, Helvetica, sans-serif" font-size="12" role="img" aria-label="time-scale strip">
+<rect x="15" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="34.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P1</text>
+<rect x="53" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="72.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P1</text>
+<rect x="91" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="110.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P2</text>
+<rect x="129" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="148.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P1</text>
+<rect x="167" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="186.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P1</text>
+<rect x="205" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="224.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P1</text>
+<rect x="243" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="262.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P1</text>
+<rect x="281" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="300.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P4</text>
+<rect x="319" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="338.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P5</text>
+<rect x="357" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="376.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P5</text>
+<rect x="395" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="414.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P4</text>
+<rect x="433" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="452.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P4</text>
+<rect x="471" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="490.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P4</text>
+<rect x="509" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="528.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P3</text>
+<rect x="547" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="566.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P3</text>
+<rect x="585" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="604.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P3</text>
+<rect x="623" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="642.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P3</text>
+<rect x="661" y="8" width="38" height="26" fill="#fff" stroke="#1f2933" stroke-width="1"/>
+<text x="680.0" y="25" text-anchor="middle" fill="#1f2933" font-weight="bold">P3</text>
+<text x="15" y="52" text-anchor="middle" fill="#1f2933">00</text>
+<text x="53" y="52" text-anchor="middle" fill="#1f2933">01</text>
+<text x="91" y="52" text-anchor="middle" fill="#1f2933">02</text>
+<text x="129" y="52" text-anchor="middle" fill="#1f2933">03</text>
+<text x="167" y="52" text-anchor="middle" fill="#1f2933">04</text>
+<text x="205" y="52" text-anchor="middle" fill="#1f2933">05</text>
+<text x="243" y="52" text-anchor="middle" fill="#1f2933">06</text>
+<text x="281" y="52" text-anchor="middle" fill="#1f2933">07</text>
+<text x="319" y="52" text-anchor="middle" fill="#1f2933">08</text>
+<text x="357" y="52" text-anchor="middle" fill="#1f2933">09</text>
+<text x="395" y="52" text-anchor="middle" fill="#1f2933">10</text>
+<text x="433" y="52" text-anchor="middle" fill="#1f2933">11</text>
+<text x="471" y="52" text-anchor="middle" fill="#1f2933">12</text>
+<text x="509" y="52" text-anchor="middle" fill="#1f2933">13</text>
+<text x="547" y="52" text-anchor="middle" fill="#1f2933">14</text>
+<text x="585" y="52" text-anchor="middle" fill="#1f2933">15</text>
+<text x="623" y="52" text-anchor="middle" fill="#1f2933">16</text>
+<text x="661" y="52" text-anchor="middle" fill="#1f2933">17</text>
+<text x="699" y="52" text-anchor="middle" fill="#1f2933">18</text>
+</svg></div><figcaption>Schedule to identify.</figcaption></figure><section class="block block--method"><p class="block__label">Checks, in this order</p><ol><li>Is a process interrupted before it finishes? If not, the policy is non-preemptive: FCFS, SPN, HRRN or non-preemptive priority. Compare the order at each free moment with arrival order (FCFS), shortest service (SPN) or highest ratio (HRRN).</li><li>If processes are interrupted, check where: only at arrivals (SRT, preemptive priority) or at regular quantum ends (RR, Feedback).</li><li>Confirm with one decision: at that time, does the chosen process match the rule?</li></ol></section><p>Here P1 runs 0 to 2, P2 runs 2 to 3, then P1 continues: P1 was interrupted at 2, exactly when P2 arrived. P2 needs 1 and P1 had 4 left. Next, P4 (arrival 5) does not interrupt P1 at 5, because P4 needs 4 and P1 has 2 left. Interruptions happen only at arrivals, and the process with the least time left always runs.</p><p>It is not preemptive priority, even though that policy also interrupts only at arrivals. At time 5, P4 (priority 2) has a higher priority than P1 (priority 3), so preemptive priority would run P4. Here P1 keeps running, which fits the time left, not the priority.</p><section class="block block--check"><p class="block__label">Try this</p><p>Name the policy and check one more decision in the schedule.</p><p><strong>Write your answer before you open the solution.</strong></p><section class="reveal" data-component="practice-reveal" id="ex-naming-reveal"><button type="button" data-practice-toggle aria-expanded="false">Show the solution</button><div id="ex-naming-solution" class="reveal__body" data-practice-solution hidden><p><strong>Shortest remaining time (SRT)</strong>. At time 8, P5 arrives needing 2 while P4 has 3 left; P5 needs less, so P5 preempts P4.</p></div></section></section></section>
+  </main>
+  <footer class="site-footer"><div class="site-footer__inner">Swift Tuition | COS 122 Operating Systems</div></footer>
+  <script>
+(function () {
+  'use strict';
+
+  var CPP98_SAMPLE = '#include <iostream>\n\nint main() {\n    int number = 4;\n    number = number + 1;\n    std::cout << number << "\\n";\n    return 0;\n}\n';
+  function query(host, selector) { return host.querySelector(selector); }
+  function setText(element, value) { if (element) { element.textContent = value; } }
+  function announce(element, message, busy) {
+    if (!element) { return; }
+    element.textContent = message;
+    element.setAttribute('aria-live', 'polite');
+    element.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+  function normalise(value) { return String(value || '').replace(/\s+/g, '').toLowerCase(); }
+  function control(host, name, alternatives) {
+    return query(host, '[data-' + name + ']') || query(host, alternatives || '');
+  }
+
+  function initHighlighting() {
+    var grammar = window.COS110Cpp98Grammar;
+    document.querySelectorAll('[data-component="cpp-highlight"]').forEach(function (host) {
+      var code = host.matches('code, pre') ? host : query(host, 'code');
+      if (!code || !grammar) { return; }
+      var rawCode = code.textContent;
+      code.dataset.cppSource = rawCode;
+      code.innerHTML = grammar.highlight(rawCode);
+      code.classList.add('cpp98-code');
+    });
+  }
+
+  function initMemorySteppers() {
+    document.querySelectorAll('[data-component="memory-stepper"]').forEach(function (host) {
+      var steps = Array.prototype.slice.call(host.querySelectorAll('[data-memory-step], .memory-step'));
+      if (!steps.length) { return; }
+      var previous = control(host, 'memory-prev', '[data-step-prev]');
+      var next = control(host, 'memory-next', '[data-step-next]');
+      var status = control(host, 'memory-status', '[data-step-status]');
+      var activeIndex = 0;
+      host.setAttribute('role', 'group');
+      host.setAttribute('aria-roledescription', 'memory sequence');
+      function render(index, focusStep) {
+        activeIndex = Math.max(0, Math.min(index, steps.length - 1));
+        steps.forEach(function (step, stepIndex) {
+          var active = stepIndex === activeIndex;
+          step.hidden = !active;
+          step.tabIndex = active ? 0 : -1;
+          step.setAttribute('aria-current', active ? 'step' : 'false');
+        });
+        if (previous) { previous.disabled = activeIndex === 0; }
+        if (next) { next.disabled = activeIndex === steps.length - 1; }
+        announce(status, 'Step ' + (activeIndex + 1) + ' of ' + steps.length + '.', false);
+        if (focusStep) { steps[activeIndex].focus(); }
+      }
+      if (previous) { previous.addEventListener('click', function () { render(activeIndex - 1, true); }); }
+      if (next) { next.addEventListener('click', function () { render(activeIndex + 1, true); }); }
+      host.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowLeft') { event.preventDefault(); render(activeIndex - 1, true); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); render(activeIndex + 1, true); }
+        if (event.key === 'Home') { event.preventDefault(); render(0, true); }
+        if (event.key === 'End') { event.preventDefault(); render(steps.length - 1, true); }
+      });
+      render(0, false);
+    });
+  }
+
+  function initRunners() {
+    document.querySelectorAll('[data-component="cpp-runner"]').forEach(function (host) {
+      var code = control(host, 'runner-code', 'textarea, [contenteditable="true"]');
+      var run = control(host, 'runner-run', 'button[type="submit"]');
+      var reset = control(host, 'runner-reset');
+      var copy = control(host, 'runner-copy');
+      var output = control(host, 'runner-output', 'output, pre');
+      var prediction = control(host, 'runner-prediction');
+      var fallback = control(host, 'runner-fallback');
+      var highlightedCode = query(host, '[data-runner-highlight] code');
+      var grammar = window.COS110Cpp98Grammar;
+      if (!code) { return; }
+      var originalCode = code.value !== undefined ? code.value : code.textContent;
+      originalCode = originalCode.trim() || CPP98_SAMPLE;
+      function readCode() { return code.value !== undefined ? code.value : code.textContent; }
+      function updateHighlight(value) {
+        if (!highlightedCode) { return; }
+        highlightedCode.innerHTML = grammar ? grammar.highlight(value) : value.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      }
+      function writeCode(value) { if (code.value !== undefined) { code.value = value; } else { code.textContent = value; } updateHighlight(value); }
+      function fallbackMessage() {
+        return 'If no result appears, keep changing the numbers and trace the statements one at a time.';
+      }
+      function reportFallback(message) { announce(fallback, message || fallbackMessage(), false); }
+      writeCode(originalCode);
+      reportFallback();
+      code.addEventListener('input', function () { updateHighlight(readCode()); });
+      code.addEventListener('scroll', function () {
+        var highlightedLayer = query(host, '[data-runner-highlight]');
+        if (highlightedLayer) { highlightedLayer.scrollTop = code.scrollTop; highlightedLayer.scrollLeft = code.scrollLeft; }
+      });
+      if (run) {
+        run.addEventListener('click', function (event) {
+          event.preventDefault();
+          var source = readCode();
+          if (!source.trim()) { announce(output, 'Add code before running it.', false); reportFallback(); return; }
+          run.disabled = true;
+          announce(output, 'Getting a result…', true);
+          reportFallback('Running your changed code…');
+          fetch('https://wandbox.org/api/compile.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              compiler: 'gcc-12.3.0',
+              code: source,
+              'compiler-option-raw': '-std=c++98\n-Wall\n-Wextra\n-pedantic'
+            })
+          }).then(function (response) {
+            if (!response.ok) { throw new Error('No result was received.'); }
+            return response.json();
+          }).then(function (result) {
+            var compilerText = (result.compiler_error || result.compiler_output || '').trim();
+            var programText = (result.program_output || result.program_error || result.status || '').trim();
+            if (result.status === '0' || result.status === 0) {
+              announce(output, programText || '(The program produced no output.)', false);
+              reportFallback('Result received. Change one number and run it again.');
+            } else {
+              announce(output, compilerText || programText || 'The code needs a fix before it can run.', false);
+              reportFallback('Check one change at a time. ' + fallbackMessage());
+            }
+          }).catch(function () {
+            announce(output, 'No result was received right now.', false);
+            reportFallback();
+          }).finally(function () { run.disabled = false; });
+        });
+      }
+      if (reset) {
+        reset.addEventListener('click', function (event) {
+          event.preventDefault(); writeCode(originalCode);
+          if (prediction) { prediction.value = ''; }
+          announce(output, 'Ready. Change a number, then run the code.', false); reportFallback();
+        });
+      }
+      if (copy) {
+        copy.addEventListener('click', function (event) {
+          event.preventDefault();
+          var source = readCode();
+          var copied = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(source) : Promise.reject();
+          copied.then(function () { announce(output, 'Code copied.', false); }).catch(function () {
+            if (code.select) { code.select(); document.execCommand('copy'); announce(output, 'Code copied.', false); }
+            else { announce(output, 'Copy is unavailable. Select the code and copy it manually.', false); }
+          });
+        });
+      }
+    });
+  }
+
+  function initPracticeReveals() {
+    document.querySelectorAll('[data-component="practice-reveal"]').forEach(function (host) {
+      var toggle = control(host, 'practice-toggle', 'button');
+      var solution = control(host, 'practice-solution', '.practice-solution');
+      if (!toggle || !solution) { return; }
+      var solutionId = solution.id || 'practice-solution-' + Math.random().toString(36).slice(2);
+      solution.id = solutionId;
+      toggle.setAttribute('aria-controls', solutionId);
+      function render(revealed) { solution.hidden = !revealed; toggle.setAttribute('aria-expanded', String(revealed)); }
+      toggle.addEventListener('click', function () { render(solution.hidden); });
+      render(false);
+    });
+  }
+
+  function initQuizzes() {
+    document.querySelectorAll('[data-component="quiz-check"]').forEach(function (card) {
+      var answer = control(card, 'quiz-answer', 'input, textarea, select');
+      var submit = control(card, 'quiz-submit', 'button[type="submit"]');
+      var feedback = control(card, 'quiz-feedback', '[role="status"], .quiz-feedback');
+      var key = card.dataset.answer || card.dataset.correctAnswer || '';
+      if (!answer || !feedback || !key) { return; }
+      function show(state) {
+        var message = card.dataset['feedback' + state] || '';
+        feedback.dataset.state = state.toLowerCase();
+        announce(feedback, message, false);
+        answer.setAttribute('aria-invalid', state === 'Incorrect' ? 'true' : 'false');
+      }
+      function check(event) {
+        if (event) { event.preventDefault(); }
+        var given = normalise(answer.value);
+        if (!given) { show('Blank'); return; }
+        var acceptable = key.split('|').map(normalise);
+        show(acceptable.indexOf(given) !== -1 ? 'Correct' : 'Incorrect');
+      }
+      if (submit) { submit.addEventListener('click', check); }
+      var form = card.closest('form');
+      if (form) { form.addEventListener('submit', check); }
+    });
+  }
+
+  function init() { initHighlighting(); initMemorySteppers(); initRunners(); initPracticeReveals(); initQuizzes(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+}());
+
+/* Contents sidebar: open on wide screens, close after a jump on small ones, mark the section in view. */
+(function () {
+  var nav = document.querySelector('.section-nav'); if (!nav) return;
+  var box = nav.querySelector('.section-nav__box');
+  var wide = window.matchMedia('(min-width: 1340px)');
+  function fit() { box.open = wide.matches; }
+  fit(); if (wide.addEventListener) wide.addEventListener('change', fit);
+  nav.addEventListener('click', function (e) {
+    var a = e.target.closest('a'); if (a && !wide.matches && a.getAttribute('href').charAt(0) === '#') box.open = false;
+  });
+  var links = nav.querySelectorAll('.is-current ul a'); if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {}; links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var seen = new Set();
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) seen.add(en.target.id); else seen.delete(en.target.id); });
+    var first = null; links.forEach(function (a) { var id = a.getAttribute('href').slice(1); if (!first && seen.has(id)) first = a; });
+    if (first) { links.forEach(function (a) { a.classList.toggle('is-active', a === first); }); }
+  }, { rootMargin: '-100px 0px -55% 0px' });
+  Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+
+  </script>
+</body>
+</html>
